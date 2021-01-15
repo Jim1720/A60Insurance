@@ -1,0 +1,15 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+    var error = TempData["error"];
+}
+ 
+<h2 class="text-warning">An error occurred while processing your request.</h2>
+
+<p style="color:white">
+
+    We are sorry an application error has occured procesing your request.
+    Please report this to the administrator
+</p>
+
+<h4 style="color:lawngreen">@error</h4>

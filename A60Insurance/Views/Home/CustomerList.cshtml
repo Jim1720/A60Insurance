@@ -1,0 +1,106 @@
+﻿
+
+
+@using A60Insurance.Models
+@model A60Insurance.Models.CustomerList
+
+
+
+@{
+    ViewData["Title"] = "Customer List";
+}
+
+
+<!DOCTYPE html>
+
+<style>
+
+    th {
+        font-size: medium;
+        color: springgreen;
+    }
+
+    td {
+        font-size: medium;
+        color: white;
+    }
+
+    h2 {
+        color: dodgerblue;
+    }
+</style>
+
+@using (Html.BeginForm("CustomerList", "Home", FormMethod.Post))
+{
+
+    <h2>Customer List</h2>
+
+    <table class="table">
+
+        <tbody>
+
+
+            @{
+                // show list of customers
+                var count = 0;
+
+
+                // get internal claim list
+                List<Customer> customerList = Model.GetList();
+
+
+                <tr style="color:dodgerblue">
+                    <td style="color:goldenrod">
+                        Customer Identification:
+                    </td>
+                    <td style="color:goldenrod">
+                        Customer Name:
+                    </td>
+                    <td>
+                        Password:
+                    </td>
+                    <td>
+                        Added with App:
+                    </td>
+                </tr>
+
+                foreach (var c in customerList)
+                {
+                    count++;
+                    var combinedName = c.CustFirst.Trim() + " " + c.CustLast.Trim();
+                    var password = c.CustPassword.Trim(); // rid trail semicolon.
+
+                    <tr>
+                        <td>
+                            @c.CustId
+                        </td>
+                        <td style="color:white">
+                            @combinedName
+                        </td>
+                        <td>
+                            @password
+                        </td>
+                        <td>
+                            @c.AppId
+                        </td>
+
+                    </tr>
+                    <tr>
+                    </tr>
+                }
+            }
+
+
+
+
+
+        </tbody>
+    </table>
+
+
+    @Html.ActionLink("Return", "AdminAction", "Home", null, new { @class = "btn btn-outline-primary" })
+
+}
+
+
+

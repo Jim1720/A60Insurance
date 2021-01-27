@@ -1,0 +1,23 @@
+﻿
+@{
+    ViewData["Title"] = "Error";
+
+    var message = ViewData["error"];
+}
+
+
+<div class="container">
+
+    <h2 style="margin-left:340px; margin-top:40px; margin-bottom: 40px; color:white">
+
+        Application has an issue and could not complete current task
+
+    </h2>
+
+    <div style='margin-left: 320px'>
+
+        <h3 style="color: red">@message</h3>
+
+    </div>
+
+</div>

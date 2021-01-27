@@ -1,0 +1,43 @@
+﻿  <script>
+
+
+// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+// for details on configuring this project to bundle and minify static web assets.
+
+// Write your JavaScript code.
+
+
+    // This code sets a hidden field on the history.cshtml 
+    // to transmit the payment amount to be processed on the claim.
+    // Usage: History screen - sets hiddenAmount when valid, 'unused' if not valid.
+     
+    function InputPayment(claimIdFromButton) {
+
+        // edits hiddenValue and resets to unused if not valid float value.  
+        var defaultValue = "unused";
+        var def = "0";
+        var amount = prompt("Please enter claim payment amount.",def)  
+        if (isNaN(amount)) {  
+
+            amountElement.value = defaultValue;
+            alert("Please enter numeric amount.");
+            return;
+        }; 
+
+        // store amount.
+        var amountElement = document.getElementById("hiddenAmount");
+        amountElement.value = amount;
+
+        var claimElement = document.getElementById("hiddenClaimId");
+        claimElement.value = claimIdFromButton;
+
+        // when submitted the controller will read the 
+        // amount and claim id from hidden fields.
+         
+        // hidden amount has a valid value will submit.
+        var s = document.getElementsByTagName("form"); 
+        s[0].submit();
+
+        return;  
+    } 
+    </script>

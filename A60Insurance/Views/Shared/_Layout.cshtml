@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+
+
+@{
+    // format date and time
+    var current = System.DateTime.Now;
+    var friendlyDate = current.ToString("t") +
+        " " +
+        current.ToString("D");
+
+    bool signedOut = true;
+    var check = TempData["CustomerId"];
+    if(check != null) { signedOut = false; }
+
+
+}
+
+
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - A60Insurance</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <!-- fix gray remove navbar-dark bg-dark border-bottom : remove white line. -->
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm mb-3">
+            <div class="container">
+                <a class="navbar-brand" style="color:aqua" asp-area="" asp-controller="Home" asp-action="Index">A60Insurance</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav flex-grow-1">
+
+
+                        @if (signedOut)  // signed out links
+                        {
+                            <li style="margin-left: 60px" class="nav-item">
+                                <!-- start screen in index so begins there. -->
+                                <a class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">Start</a>
+                            </li>
+                            <li style="margin-left: 60px" class="nav-item">
+                                <a class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="Classic">Classic</a>
+                            </li>
+                            <li style="margin-left: 60px" class="nav-item">
+                                <a class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="Register">Register</a>
+                            </li>
+                            <li style="margin-left: 60px" class="nav-item">
+                                <a class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="Signin">Sign in</a>
+                            </li>
+                            <li style="margin-left: 60px" class="nav-item">
+                                <a class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="About">About</a>
+                            </li>
+
+                            <li style="margin-left: 60px" class="nav-item">
+                                <a class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="AdminSignin">Admin</a>
+                            </li>
+
+
+
+                        }
+                        else
+                        {
+
+                            <li class="nav-item">
+                                <a style="margin-left: 60px" class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="Menu">Menu</a>
+                            </li>
+                            <li class="nav-item">
+                                <a style="margin-left: 60px" class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="Update">Update</a>
+                            </li>
+                            <li class="nav-item">
+                                <a style="margin-left: 60px" class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="Claim">Claim</a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a style="margin-left: 60px" class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="History">History</a>
+                            </li>
+                            <li class="nav-item">
+                                <a style="margin-left: 60px" class="b3 nav-link text-light" asp-area="" asp-controller="Home" asp-action="Signout">Signout</a>
+                            </li>
+
+                            <!-- signed in .... show name and customer id. -->
+
+                            var custId = TempData["CustomerID"];
+                            var custFirst = TempData["custFirst"];
+                            var custLast = TempData["custLast"];
+                            var showCust = custId + " * " + custFirst + " " + custLast;
+                            var show = showCust;
+                            <li class="nav-item" style="color:goldenrod"><a style="color:goldenrod" class="b2 nav-link" asp-area="" asp-controller="Home" asp-action="Update">@show</a></li>
+
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+
+
+        @if (signedOut)  // show info when signed out - 
+        {
+            <div class="container">
+                <!-- a60 additions at bottom -->
+                &copy; 2019 - A60Insurance - ASP.Net Core 3
+                <text>Find out info here</text>
+                <!-- replacing asp-controller and asp-action with asp-page-->
+                <a style="color: white" asp-area="" asp-action="Goals">Info</a>
+                <text>Find about here...</text>
+                <a style="color: white" asp-area="" asp-action="About">About</a>
+                <text>Time to buy...</text>
+                <a style="color: white" asp-area="" asp-action="Register">@friendlyDate</a>
+                <text>This is a demonstration website not an actual business.</text>
+            </div>
+        } 
+        </footer>
+
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

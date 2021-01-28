@@ -21,6 +21,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace A60Insurance.Controllers
 {
+    public class FetchParm
+    {
+        public bool status;
+        public string message;
+        public Customer signinCust;
+    }
+
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger; 
@@ -90,7 +97,9 @@ namespace A60Insurance.Controllers
 
             var custId = TempData["CustomerId"]; 
             var msg = TempData["MenuMessage"];
+            var token = TempData["Token"];
 
+            TempData["Token"] = token;
             TempData["CustomerId"] = custId;
             TempData["CustomerSignedIn"] = "yes"; 
             TempData["MenuMessage"] = "";
@@ -251,9 +260,10 @@ namespace A60Insurance.Controllers
             return RedirectToAction("Menu");
         }
 
+        
+
         private async Task<HttpResponseMessage> UpdateCustomerPlan(PlanUpdateParameters pup)
         {
-            // PUT controller: route: api/Customers/5  
             var uri = _send + "api/UpdateCustomerPlan/";
             var client = _factory.CreateClient("UpdateCustomerPlan");
             string json = JsonConvert.SerializeObject(pup);
@@ -261,10 +271,20 @@ namespace A60Insurance.Controllers
                 System.Text.Encoding.UTF8,
                 "application/json");
 
+            var request = new HttpRequestMessage()
+             {
+                  RequestUri = new Uri(uri),
+                  Content = content,
+                  Method = HttpMethod.Put 
+              };
+
+            var token = TempData.Peek("Token").ToString(); 
+            request.Headers.Add("A65TOKEN", token);
+
             HttpResponseMessage response = null;
             try
             {
-                response = await client.PutAsync(uri, content);
+                response = await client.SendAsync(request);
             }
             catch (HttpRequestException re)
             {
@@ -278,7 +298,8 @@ namespace A60Insurance.Controllers
                 _logger.LogInformation("caught:" + ex.Message.ToString());
             }
             _logger.LogInformation("update plan  call completed ok.");
-            return response;
+            return response; 
+
         }
 
 
@@ -449,6 +470,7 @@ namespace A60Insurance.Controllers
 
             // good result - save id and goto update  
             TempData.Clear();
+            TempData["Token"] = GetToken(m);
             TempData["CustomerId"] = Customer.CustId;
             //string json = JsonConvert.SerializeObject(Customer);
             //TempData["jsonCustomer"] = json;
@@ -512,12 +534,19 @@ namespace A60Insurance.Controllers
                 System.Text.Encoding.UTF8,
                 "application/json");
 
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(uri),
+                Content = content,
+                Method = HttpMethod.Post
+            }; 
+
             //TODO: not: not add cors since in same project. 
             _logger.LogInformation("client preping for register customer");
             HttpResponseMessage response = null;
             try
             {
-                response = await client.PostAsync(uri, content);
+                response = await client.SendAsync(request);
             }
             catch (HttpRequestException re)
             {
@@ -530,6 +559,7 @@ namespace A60Insurance.Controllers
                 Console.WriteLine("caught:" + ex.Message.ToString());
             }
 
+            TempData["Token"] = GetToken(response);
             TempData["CustomerSignedIn"] = true;
             TempData["AdminSignedIn"] = false;
             TempData["MenuMessage"] = "Customer Registered Successfully";
@@ -569,7 +599,7 @@ namespace A60Insurance.Controllers
             var custId = signin.CustomerId;
             var pass = signin.Password;
 
-            HttpResponseMessage m =  await ReadCustomer(custId);
+            HttpResponseMessage m =  await ReadCustomer(custId, "Signin");
 
             if( m == null )
             {
@@ -614,6 +644,7 @@ namespace A60Insurance.Controllers
             // good result - save id and goto update.
             TempData.Clear();
 
+            TempData["Token"] = GetToken(m);  
             TempData["signedIn"] = true;
             TempData["CustomerId"] = customer.CustId;
             TempData["CustomerName"] = customer.CustFirst + " " + customer.CustLast;
@@ -631,7 +662,35 @@ namespace A60Insurance.Controllers
 
             return RedirectToAction("Menu");
         }
-         
+
+        private string GetToken(HttpResponseMessage response)
+        {
+            // save anti forgery token for future api calls...
+
+
+            string token = "";
+            foreach (var header in response.Headers)
+            {
+                if (header.Key == "Set-Cookie")
+                {
+                    token = "";
+                    foreach (var s in header.Value)
+                    {
+                        token += s;
+                    }
+                };
+            };
+
+            return token;
+
+        }
+
+        private void AddTokenToRequest()
+        {
+
+
+        }
+
         public IActionResult Signout()
         {
             _logger.LogInformation("** signout **");
@@ -651,11 +710,19 @@ namespace A60Insurance.Controllers
 
         
 
-        private async Task<HttpResponseMessage> ReadCustomer(string custId) 
-        {
-            
-            var sendString = _send +
-                            "api/Customer/" + custId;
+        private async Task<HttpResponseMessage> ReadCustomer(string custId, string Action) 
+        { 
+
+            var signinString = _send +
+                            "api/Signin/" + custId;
+
+
+            var readString = _send +
+                           "api/Customer/" + custId;
+
+            //signin gets a token; read does not.
+            var sendString = (Action == "Signin") ? signinString : readString;
+
 
             var client = _factory.CreateClient("read");
             _logger.LogInformation("* reading customer");
@@ -686,7 +753,7 @@ namespace A60Insurance.Controllers
 
 
         [HttpGet]
-        public IActionResult Update()
+        public async Task<IActionResult> Update()
         {
 
             // verify proper signin
@@ -713,9 +780,10 @@ namespace A60Insurance.Controllers
             // note: Cust Model has no customer id. 
             //String json = TempData["jsonCustomer"] as string;
             //Customer signinCust = (Customer)JsonConvert.DeserializeObject<Customer>(json);
-             
 
-            var (status, message, signinCust) = FetchCustomer(customerId).Result;
+
+            var (status, message, signinCust) =  await FetchCustomer(customerId);
+           
             if(!status)
             {
                 ViewData["error"] = message;
@@ -728,7 +796,7 @@ namespace A60Insurance.Controllers
             // used for screen validation only.
             // then, transimitted to customer to
             // update dateabase.
-
+              
            cust.CustFirst = signinCust.CustFirst.Trim();
            cust.CustLast = signinCust.CustLast.Trim();
            cust.CustEmail = signinCust.CustEmail.Trim();
@@ -748,9 +816,8 @@ namespace A60Insurance.Controllers
            var claimCount = signinCust.ClaimCount.Trim().ToString();
            var intCount = Int32.Parse(claimCount);
 
-            TempData["existingPassword"] = signinCust.CustPassword; 
-            TempData["CustomerId"] = signinCust.
-                CustId; 
+            TempData["existingPassword"] = signinCust.CustPassword;
+            TempData["CustomerId"] = signinCust.CustId; 
 
             // show posted or standard message.
        //     var standard = cust.CustFirst + " " + cust.CustLast + " ready for update.";
@@ -769,19 +836,22 @@ namespace A60Insurance.Controllers
 
             // store non display fields in temp data to avoid losing data.
 
+
+            var token = TempData["Token"];
             TempData["CustPlan"] = signinCust.CustPlan.Trim();
             TempData["ClaimCount"] = signinCust.ClaimCount.Trim();
         //*    TempData["Encrypted"] = signinCust.Encrypted.Trim();
             TempData["PromotionCode"] = signinCust.PromotionCode.Trim();
-            TempData["AppId"] = signinCust.AppId.Trim(); 
+            TempData["AppId"] = signinCust.AppId.Trim();
+            TempData["Token"] = token;
             TempData.Keep();
 
             return View(cust);
         } 
 
-        async protected Task<(Boolean, string, Customer)> FetchCustomer(string CustomerId)
+        async protected Task<(bool status, string message, Customer customer)>FetchCustomer(string CustomerId)
         {
-            HttpResponseMessage m = await ReadCustomer(CustomerId);
+            HttpResponseMessage m = await ReadCustomer(CustomerId, "Read");
             var message = "";
             var goodResult = false;
 
@@ -790,7 +860,7 @@ namespace A60Insurance.Controllers
                 message = "Server is down. Please report issue. Thanks."; 
             }
 
-            if (m.StatusCode.ToString() == "InternalServerError")
+                if (m.StatusCode.ToString() == "InternalServerError")
             {
                 message = "Server is up but has internal error"; 
             }
@@ -800,19 +870,23 @@ namespace A60Insurance.Controllers
                 message = "Customer not found."; 
             }
 
+            if(message != "")
+            {
+                return (false, message, null);
+            } 
+
             HttpContent content = m.Content;
             HttpStatusCode statusCode = m.StatusCode;
             string json = await content.ReadAsStringAsync();
-            Customer customer = (Customer)JsonConvert.DeserializeObject<Customer>(json);
-
              goodResult = (statusCode == HttpStatusCode.OK);
             _logger.LogInformation("status code: " + statusCode);
 
             if (goodResult == false)
             {
-               message += "status code:" + statusCode + " was returned. "; 
-            }
+                message += "status code:" + statusCode + " was returned. ";
+            } 
 
+            Customer customer = (Customer)JsonConvert.DeserializeObject<Customer>(json); 
             return (goodResult, message, customer);
         }
 
@@ -958,7 +1032,14 @@ namespace A60Insurance.Controllers
             //
             Boolean goodResult = (statusCode == HttpStatusCode.OK ||
                 statusCode == HttpStatusCode.NoContent); // TODO: check this out
-           _logger.LogInformation("status code: " + statusCode);
+           _logger.LogInformation("status code: " + statusCode); 
+
+            if(statusCode == HttpStatusCode.BadRequest)
+            {
+                ViewData["Message"] = "Invalid Access";
+                TempData.Keep();
+                return View(Cust);
+            }
 
             if (goodResult == false)
             {
@@ -979,9 +1060,12 @@ namespace A60Insurance.Controllers
             return View(Cust);
         }
 
+         
+
         private async Task<HttpResponseMessage> UpdateCustomer(Customer customer)
-        {
-            // PUT controller: route: api/Customers/5  
+        { 
+            // Put controller.
+
             var uri = _send + "api/UpdateCustomer/";
             var client = _factory.CreateClient("update");
             string json = JsonConvert.SerializeObject(customer);
@@ -989,10 +1073,22 @@ namespace A60Insurance.Controllers
                 System.Text.Encoding.UTF8,
                 "application/json");
 
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(uri),
+                Content = content,
+                Method = HttpMethod.Put
+            };
+
+            var token = TempData.Peek("Token").ToString();
+            request.Headers.Add("A65TOKEN", token);
+
+
             HttpResponseMessage response = null;
             try
             {
-                response = await client.PutAsync(uri, content);
+                //response = await client.PutAsync(uri, content);
+                response = await client.SendAsync(request);
             }
             catch (HttpRequestException re)
             {
@@ -1491,8 +1587,10 @@ namespace A60Insurance.Controllers
 
 
 
-            //TODO: put cust plan here
-            var (status, message, Customer) = FetchCustomer(custId).Result;
+            //TODO: put cust plan here 
+
+            var (status, message, customer) = await FetchCustomer(custId); 
+
             if (!status)
             {
                 ViewData["error"] = message;
@@ -1500,7 +1598,7 @@ namespace A60Insurance.Controllers
                 View("Error");
             }
 
-            var plan = Customer.CustPlan.Trim();
+            var plan = customer.CustPlan.Trim();
 
             // edit for valid plan.
             if (plan == "")
@@ -1742,11 +1840,21 @@ namespace A60Insurance.Controllers
                 System.Text.Encoding.UTF8,
                 "application/json");
 
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(uri),
+                Content = content,
+                Method = HttpMethod.Put
+            };
+
+            var token = TempData.Peek("Token").ToString();
+            request.Headers.Add("A65TOKEN", token);
+
             var caught = false;
             HttpResponseMessage response = null;
             try
             {
-                response = await client.PutAsync(uri, content);
+                response = await client.SendAsync(request);
             }
             catch (HttpRequestException re)
             {
@@ -1792,11 +1900,21 @@ namespace A60Insurance.Controllers
                 System.Text.Encoding.UTF8,
                 "application/json");
 
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(uri),
+                Content = content,
+                Method = HttpMethod.Put
+            };
+
+            var token = TempData.Peek("Token").ToString();
+            request.Headers.Add("A65TOKEN", token);
+
             var caught = false;
             HttpResponseMessage response = null;
             try
             {
-                response = await client.PutAsync(uri, content);
+                response = await client.SendAsync(request);
             }
             catch (HttpRequestException re)
             {
@@ -1830,10 +1948,20 @@ namespace A60Insurance.Controllers
                 System.Text.Encoding.UTF8,
                 "application/json");
 
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(uri),
+                Content = content,
+                Method = HttpMethod.Post
+            };
+
+            var token = TempData.Peek("Token").ToString();
+            request.Headers.Add("A65TOKEN", token);
+
             HttpResponseMessage response = null;
             try
             {
-                response = await client.PostAsync(uri, content);
+                response = await client.SendAsync(request);
             }
             catch (HttpRequestException re)
             {
@@ -2089,11 +2217,21 @@ namespace A60Insurance.Controllers
             var content = new StringContent(json,
                 System.Text.Encoding.UTF8,
                 "application/json");
-             
+
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(uri),
+                Content = content,
+                Method = HttpMethod.Put
+            };
+
+            var token = TempData.Peek("Token").ToString();
+            request.Headers.Add("A65TOKEN", token);
+
             HttpResponseMessage response = null;
             try
             {
-                response = await client.PutAsync(uri, content);
+                response = await client.SendAsync(request);
             }
             catch (HttpRequestException re)
             {
@@ -2275,12 +2413,22 @@ namespace A60Insurance.Controllers
                 System.Text.Encoding.UTF8,
                 "application/json");
 
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(uri),
+                Content = content,
+                Method = HttpMethod.Put
+            };
+
+            var token = TempData.Peek("Token").ToString();
+            request.Headers.Add("A65TOKEN", token);
+
             //TODO: not: not add cors since in same project. 
             _logger.LogInformation("prepare reset password.");
             HttpResponseMessage response = null;
             try
             {
-                response = await client.PutAsync(uri, content);
+                response = await client.SendAsync(request);
             }
             catch (HttpRequestException re)
             {
@@ -2329,12 +2477,22 @@ namespace A60Insurance.Controllers
                 System.Text.Encoding.UTF8,
                 "application/json");
 
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(uri),
+                Content = content,
+                Method = HttpMethod.Put
+            };
+
+            var token = TempData.Peek("Token").ToString();
+            request.Headers.Add("A65TOKEN", token);
+
             //TODO: not: not add cors since in same project. 
             _logger.LogInformation("prepare reset customer.");
             HttpResponseMessage response = null;
             try
             {
-                response = await client.PutAsync(uri, content);
+                response = await client.SendAsync(request);
             }
             catch (HttpRequestException re)
             {

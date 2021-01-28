@@ -1,0 +1,2 @@
+
+ update homecontroller to accept/use token for api calls.

@@ -1,0 +1,47 @@
+﻿ 
+@{
+    ViewData["Title"] = "Main Menu";
+}
+<!-- copied from a11 -->
+<div class="container">
+
+
+    <div style='margin-left: 320px'>
+        <div class="row justify-content-left">
+            <font family="arial" font-size="60" style="color:burlywood">
+                <h1 display-1> Main Insurance Menu</h1>
+            </font>
+        </div>
+    </div>
+
+    <div class="row-md-6">
+
+        <img alt="Second slide" src="~/pics/rock.jpg" class="img-fluid" style="margin: 10px">
+
+    </div>
+
+
+    <br />
+
+    <div class="row" style="margin-left: 100px;">
+
+        <a type="button" class="b1w btn btn-primary" asp-controller="Home" asp-action="Update">Update Info</a>
+        <a type="button" class="b1w btn btn-primary" asp-controller="Home" asp-action="Claim">File Claim</a>
+        <a type="button" class="b1w btn btn-primary" asp-controller="Home" asp-action="History">Claim History</a>
+        <a type="button" class="b1w btn btn-primary" asp-controller="Home" asp-action="Plan">Change Plan</a>
+        <a type="button" class="b1w btn btn-primary" asp-controller="Home" asp-action="SignOut">Sign Out</a>
+
+
+    </div>
+
+
+    <div class="row">
+         
+
+            <p style="margin-left: 320px; margin-top: 15px; color:burlywood;">@ViewData["MenuMessage"]</p>
+
+         
+
+    </div>
+
+</div>

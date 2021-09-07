@@ -1,0 +1,83 @@
+﻿
+
+@using A60Insurance.Models
+@model A60Insurance.Models.Plans 
+
+@{
+    ViewData["Title"] = "Plan Select"; 
+    var message = "Please select a coverage plan."; 
+} 
+
+
+@using (Html.BeginForm("PlanUpdate", "Home", FormMethod.Post))
+{
+
+    <div class="container">
+
+
+        <div style='margin-left:120px'>
+            <div class="row justify-content-left">
+                <font family="arial" font-size="60" style="color:Highlight">
+                    <h1 display-1><i> Plan Selection</i></h1>
+                </font>
+            </div>
+        </div>
+
+        
+           @{   var plans = Model.GetList(); 
+               foreach(var plan in plans)
+               {
+                   var planName = plan.PlanName.ToString().Trim();
+                   var planLiteral = plan.PlanLiteral.ToString().Trim();
+
+                   var q = "'";
+                   var parm = @q + planName + q;
+
+
+                     <div style="margin-top: 20px;" class="row justify-content-left">
+
+                               <div>
+                                    
+                                   <button onclick="planSelect(@parm)" 
+                                           type="button"  
+                                           class="st1 b1 btn btn-primary">
+
+                                       @planName
+                                          
+                                   </button>
+
+                               </div>
+
+                               <div style="margin-left: 80px; color:burlywood; font-size: larger;"> 
+
+                                   @planLiteral
+
+                               </div>
+
+                      </div>
+
+                   }
+            }
+
+            
+            <footer style='margin-left: 120px; margin-top: 240px;'>
+                <div style="color: burlywood">@message</div>
+                <br /><br />
+                <div class="col-md-3">
+                    <a type="button" class="b1 btn btn-primary" asp-controller="Home" asp-action="Menu">Menu</a>
+                </div>
+            </footer>
+
+            <!-- store plan name on clicked button.  -->
+            <input style="visibility:hidden" id="hiddenPlan" name="hiddenPlan" type="text" />
+
+    </div>
+
+    }
+
+
+
+
+
+
+

@@ -1,0 +1,87 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+@model A60Insurance.Models.Signin
+@{
+    ViewData["Title"] = "Signin";
+}
+
+
+
+@using (Html.BeginForm("Signin", "Home", FormMethod.Post))
+{ 
+
+    <div class="container">
+
+        <h2 style="margin-left:340px; margin-top:40px; margin-bottom: 40px; color:burlywood">Customer Sign In</h2>
+
+        <div style='margin-left: 320px'>
+
+            <div class="row" form-control>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label style="color:dodgerblue;" asp-for="@Model.CustomerId" class="st1 control-label">Customer Id:</label>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">$</span>
+                            <input asp-for="@Model.CustomerId" class="st1 form-control" placeholder="Customer Id" type="text" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label style="color:dodgerblue;" asp-for="@Model.Password" class="st1 control-label">Password:</label>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">$</span>
+                            <input asp-for="@Model.Password" class="st1 form-control" placeholder="Password" type="password" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <br />
+            <div class="row" form-control>
+
+                <div class="col-md-2"></div>
+                <div class="col-md-6" style="color:white">
+                    <button type="submit" class="b1 btn btn-primary">Sign In</button>
+                </div>
+
+            </div>
+
+
+            <br />
+            <div class="row" form-control>
+
+
+                <div class="col-md-2"></div>
+                <div class="col-md-6" style="color:white">
+
+
+                    @Html.ValidationSummary()
+
+                    <p style="color:burlywood">@ViewData["Message"]</p>
+
+
+                </div>
+
+            </div>
+
+
+
+        </div>
+
+    </div>
+
+
+}
+
+
+
+
+
+
+
+
+
+

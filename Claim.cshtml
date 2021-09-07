@@ -1,0 +1,277 @@
+﻿
+@model A60Insurance.Models.Claim
+
+
+@using A60Insurance.StyleFeature
+
+@inject IScreenStyleFactory screenStyleFactory
+@*
+
+            Claim Screen --- Add a claim
+
+    1.4 - Add Javascript to detect clicks or other events
+          show or hide the bound fields by claim type.
+
+    1.4 - todo: refactor to 1 method
+          change title by type leave color alone
+          change submit by type to claim color
+          move script somewhere back to orig page POC did work!
+
+    3.26 - due to adding payment pop-up button does not transmit data
+           calling PaymentAmount(claimId) and javascript puts that into the
+           hiddenClaimId field.
+           The hiddenClaimAmount is populate by javascript alert in
+           PaymentAmount.htm javascript.
+
+    7.22 - hide a field --
+
+    7.30 - add service dropdown --
+
+*@
+
+
+@{ List<SelectListItem> diagnoses = new List<SelectListItem>()
+{
+            new SelectListItem { Value = "none", Text = "none" },
+            new SelectListItem { Value = "1001", Text = "1001" },
+            new SelectListItem { Value = "1002", Text = "1002" }
+        };
+
+    List<SelectListItem> procedures = new List<SelectListItem>()
+{
+            new SelectListItem { Value = "none", Text = "none" },
+            new SelectListItem { Value = "9001", Text = "9001" },
+            new SelectListItem { Value = "9002", Text = "9002" }
+        };
+
+
+    List<SelectListItem> doctors = new List<SelectListItem>()
+{
+            new SelectListItem { Value = "Dr. Smith", Text = "Dr. Smith" },
+            new SelectListItem { Value = "Dr. Jones", Text = "Dr. Jones" }
+        };
+
+
+    List<SelectListItem> clinics = new List<SelectListItem>()
+{
+            new SelectListItem { Value = "First Clinic", Text = "First Clinic" },
+            new SelectListItem { Value = "Second Clinic", Text = "Second Clinic" },
+            new SelectListItem { Value = "The Hospital", Text = "The Hospital" }
+        };
+
+
+    List<SelectListItem> locations = new List<SelectListItem>()
+{
+            new SelectListItem { Value = "Hospital", Text = "Hospital" },
+            new SelectListItem { Value = "Outpatient", Text = "Outpatient" },
+             new SelectListItem { Value = "Office", Text = "Office" },
+            new SelectListItem { Value = "Clinic", Text = "Clinic" }
+        };
+
+
+    List<SelectListItem> methods = new List<SelectListItem>()
+{
+            new SelectListItem { Value = "Bill Provider", Text = "Billed to Provider" },
+            new SelectListItem { Value = "Out of Pocket", Text = "Out of Pocket" }
+        };
+
+
+    // get class for form.
+    var externalClass = "bg-style";
+    var labelColor = "dodgerblue";
+    var userColor = "white";
+    var messageColor = "gold";
+    var headerColor = "gold";
+    var screenStyleObject = screenStyleFactory.getCurrentStyleForScreen("claim");
+    if (screenStyleObject != null)
+    {
+        externalClass = screenStyleObject.externalClass;
+        // for color styles: outline and solid the
+        // java script will set the four colors
+        // including: header, label and message colors.
+        userColor = screenStyleObject.userColor;
+        labelColor = screenStyleObject.labelColor;
+        headerColor = screenStyleObject.headerColor;
+        messageColor = screenStyleObject.messageColor;
+    } }
+
+
+
+@using (Html.BeginForm("Claim", "Home", FormMethod.Post))
+{
+
+
+<div id="FormStyleClass" class="@externalClass">
+
+    <div id="ClaimScreen" class="row">
+        <!-- this row contains buttons and form -->
+        <!-- buttons first column of row -->
+
+        <div class="col-2" style="margin-top: 120px; ">
+            <!-- first column of row: buttons -->
+            <!-- dt('m') displays medical fields : d,v,x for other types -->
+            <!-- click methods on deselected type buttons will change the type to that selection -->
+
+            <div id="typebuttons" name="typebuttons" class="list-group">
+
+                <!-- java script puts buttons in here ... -->
+
+            </div>
+        </div>
+
+        <div class="col">
+
+
+         
+            <div class="row justify-content-center">
+                <h4 style="margin: 8px; color: @headerColor">Submit Claim</h4>
+            </div>
+
+            
+            <div class="row">
+
+                <div class="col">
+
+
+                    <label style="color:@labelColor;" asp-for="@Model.PatientFirst" class="st1 control-label">First Name:</label>
+                    <input asp-for="@Model.PatientFirst" class="form-control" placeholder="First Name" type="text" />
+
+                    <label style="color:@labelColor;" asp-for="@Model.PatientLast" class="st1 control-label">Last Name:</label>
+                    <input asp-for="@Model.PatientLast" class="form-control" placeholder="Last Name" type="text" />
+
+
+                    <br /><label style="color:@labelColor;" class="st1 control-label">Diagnosis Codes:</label>
+                    <select class="form-control" asp-for="@Model.Diagnosis1" asp-items="@diagnoses"></select>
+                    <select class="form-control" asp-for="@Model.Diagnosis2" asp-items="@diagnoses"></select>
+
+                    <br /><label style="color:@labelColor" class="st1 control-label">Procedure Codes:</label>
+                    <select class="form-control" asp-for="@Model.Procedure1" asp-items="@procedures"></select>
+                    <select class="form-control" asp-for="@Model.Procedure2" asp-items="@procedures"></select>
+
+
+                    <br />
+
+                </div>
+
+                <div class="col">
+
+                    <label style="color:@labelColor;margin-bottom: 10px" class="st1 control-label">Physician:</label>
+                    <select class="form-control" asp-for="@Model.Physician" asp-items="@doctors"></select>
+
+                    <label style="color:@labelColor;margin-bottom:10px" class="st1 control-label">Clinics:</label>
+                    <select class="form-control" asp-for="@Model.Clinic" asp-items="@clinics"></select>
+
+                    <label style="color:@labelColor;margin-bottom:10px" class="st1 control-label">Date of Service:</label>
+                    <input class="form-control" asp-for="@Model.ScreenDateService=" text" />
+
+                    <label style="color:@labelColor;margin-bottom:10px" class="st1 control-label">Location Type:</label>
+                    <select class="form-control" asp-for="@Model.Location" asp-items="@locations"></select>
+
+                    <!-- SERVICE DROP DOWNS -->
+                    <br />
+
+                    <label id="m1" style="color:red;margin-bottom: 20px" class="st1 control-label">Medical Service:</label>
+
+                    <select id="m2" class="form-control" asp-for="@Model.Service" asp-items="@Model.MedicalServiceOptions" type="text"></select>
+
+                    <label id="d1" style="color:@labelColor;margin-bottom:20px" class="st1 control-label">Dental Service:</label>
+
+                    <select id="d2" class="form-control" asp-for="@Model.dService" asp-items="@Model.DentalServiceOptions" type="text"></select>
+
+                    <label id="v1" style="color:gold;margin-bottom:20px" class="st1 control-label">Vision Service:</label>
+
+                    <select id="v2" class="form-control" asp-for="@Model.vService" asp-items="@Model.VisionServiceOptons" type="text"></select>
+
+                    <label id="x1" style="color:lawngreen;margin-bottom:20px" class="st1 control-label">Drug Service:</label>
+
+                    <select id="x2" class="form-control" asp-for="@Model.xService" asp-items="@Model.DrugServiceOptions" type="text"></select>
+
+                </div>
+
+                <div class="col">
+
+                    <label style="color:@labelColor" class="st1 control-label">Referring:</label><br />
+                    <input class="form-control" asp-for="@Model.Referral" placeholder="Referral" type="text" />
+
+                    <label style="color:@labelColor" class="st1 control-label">Payment Method:</label><br />
+                    <select class="form-control" asp-for="@Model.PaymentAction" asp-items="@methods"></select>
+
+                    <br />
+                    <label style="color:@labelColor" class="st1 control-label">Notes:</label><br />
+                    <input class="form-control" asp-for="@Model.ClaimDescription" placeholder="Description" type="text" />
+
+                    <!-- type fields -->
+
+                    <br />
+
+                    <label id="c1" style="color:red;" asp-for="@Model.ScreenDateConfine" class="st1 control-label">Confine Date:</label>
+                    <input id="c2" asp-for="@Model.ScreenDateConfine" class="form-control" placeholder="Confine" type="text" />
+
+                    <label id="r1" style="color:red;" asp-for="@Model.ScreenDateRelease class=" st1 control-label">Release Date:</label>
+                    <input id="r2" asp-for="@Model.ScreenDateRelease" class="form-control" placeholder="Release" type="text" />
+
+                    <label id="t1" style="color:@labelColor;" asp-for="@Model.ToothNumber" class="st1 control-label">Tooth Numnber:</label>
+                    <input id="t2" asp-for="@Model.ToothNumber" class="form-control" placeholder="Tooth" type="text" />
+
+                    <label id="e1" style="color:palegoldenrod;" asp-for="@Model.Eyeware" class="st1 control-label">Eyeware:</label>
+                    <input id="e2" asp-for="@Model.Eyeware" class="form-control" placeholder="Eyeware" type="text" />
+
+                    <label id="a1" style="color:limegreen;" asp-for="@Model.DrugName" class="st1 control-label">Drug Name:</label>
+                    <input id="a2" asp-for="@Model.DrugName" class="form-control" placeholder="Drug" type="text" />
+
+
+
+                </div>
+
+
+
+            </div>
+
+
+            <div class="row justify-content-center">
+
+                <button style="margin:5px;" type="submit" class="btn st1 b1  btn-primary">Submit Claim</button>
+                @Html.ActionLink("Return", "Menu", "Home", null, new { style = "margin:5px;", @class = "btn btn-primary" })
+
+            </div>
+             
+
+                <div style="margin: 10px; color:@messageColor">   
+                        @ViewData["Message"]   
+                </div>  
+        </div>
+
+
+    </div> <!-- end of row -->
+    <!-- color hidden fields for java script refernece -->
+    <!-- see ColorSetup.htm for the java script. -->
+
+    <div class="row"> <!-- conserve space -->
+
+
+        <!-- claim type gets stored here by java script  -->
+        <input style="visibility:hidden" id="hiddenType" type="text" asp-for="@Model.ClaimType" />
+
+        <input style="display:none"
+               id="userColor"
+               type="text"
+               value="@userColor" />
+
+        <input style="display:none"
+               id="headerColor"
+               type="text"
+               value="@headerColor" />
+
+        <input style="display:none"
+               id="messageColor"
+               type="text"
+               value="@messageColor" />
+
+        <input style="display:none"
+               id="labelColor"
+               type="text"
+               value="@labelColor" />
+
+    </div>
+
+</div> <!-- end form style class-->}

@@ -1,0 +1,115 @@
+@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+@model A60Insurance.Models.AdminAction
+@{
+    ViewData["Title"] = "Admin Action";
+    var message = ViewData["Message"];
+}
+
+
+
+@using (Html.BeginForm("AdminAction", "Home", FormMethod.Post))
+{
+
+    <div class="container">
+
+        <h2 style="margin-left:340px; margin-top:40px; margin-bottom: 40px; color:white">Admin Action</h2>
+
+        <div style='margin-left: 160px'>
+
+            <div class="row" form-control>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label style="color:dodgerblue;" asp-for="@Model.CustomerId" class="st1 control-label">Customer Id:</label>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">$</span>
+                            <input asp-for="@Model.CustomerId" class="form-control" placeholder="Customer Id" type="text" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" form-control>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label style="color:dodgerblue;" asp-for="@Model.NewPassword" class="st1 control-label">New Password:</label>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">$</span>
+                            <input asp-for="@Model.NewPassword" class="form-control" placeholder="New Password" type="text" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label style="color:dodgerblue;" asp-for="@Model.NewPassword2" class="st1 control-label">Confirm New Password:</label>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">$</span>
+                            <input asp-for="@Model.NewPassword2" class="form-control" placeholder="Confirm Password" type="text" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" form-control>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label style="color:dodgerblue;" asp-for="@Model.NewCustomerId" class="st1 control-label">New Customer Id:</label>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">$</span>
+                            <input asp-for="@Model.NewCustomerId" class="form-control" placeholder="New Customer Id:" type="text" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label style="color:dodgerblue;" asp-for="@Model.NewCustomerId2" class="st1 control-label">Confirm New Customer Id:</label>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="basic-addon1">$</span>
+                            <input asp-for="@Model.NewCustomerId2" class="form-control" placeholder="Confirm New Customer Id:" type="text" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+            <br />
+            <div class="row" form-control>
+
+                <div class="col-md-3">
+                    <button id="sub" name="sub" type="submit" class="b1 btn btn-primary" value="ListCustomers">List Customers</button>
+                </div>
+
+                <div class="col-md-3">
+                    <button id="sub" name="sub" type="submit" class="b1 btn btn-primary" value="ResetPassword">Reset Password</button>
+                </div>
+
+                <div class="col-md-3">
+                   <button id="sub" name="sub" type="submit" class="b1 btn btn-primary" value="ResetCustomerId">Reset Customer Id</button>
+                </div>
+            </div> 
+
+            <br />
+            <div class="row" form-control> 
+                <div class="col-md-6" style="color:white"> 
+                    @Html.ValidationSummary() 
+                    <p style="color:white">@message</p> 
+                </div> 
+            </div> 
+        </div>  
+    </div>
+}
+
+
+
+
+
+
+
+
+
+
+

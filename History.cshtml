@@ -1,0 +1,416 @@
+﻿
+
+@{
+    ViewData["Title"] = "History";
+}
+
+@using A60Insurance.Models
+@model A60Insurance.Models.ClaimsHistory
+
+
+<!DOCTYPE html>
+
+<style>
+
+    th {
+        font-size: medium;
+        color: springgreen;
+    }
+
+    td {
+        font-size: medium;
+        color: white;
+    }
+
+    h2 {
+        color: dodgerblue;
+    }
+</style>
+
+@using (Html.BeginForm("ReadClaimHistory", "Home", FormMethod.Post))
+{
+
+    ViewBag.Title = "Show Claim History";
+
+    <br />
+
+    <input style="visibility:hidden" type="text" id="hiddenAmount"  name="hiddenAmount"  value="unused" /> 
+
+    <input style="visibility:hidden" type="text" id="hiddenClaimId" name="hiddenClaimId" value="unused" /> 
+
+    <h2>Claim History</h2> 
+
+    <table class="table">
+
+        <tbody>
+
+
+            @{
+                // show list of claims
+                var count = 0;
+                var loop = 0;
+                var anyOfAbove = false;
+
+                // get internal claim list
+                List<Claim> claimList = Model.GetList();
+
+                var stay = "";
+
+                foreach (var c in claimList)
+                {
+                    count++;
+                    loop++;
+                    var type = "undefined";
+                    var statColor = "white";
+                    var plan = c.PlanId.ToString().Trim();
+                    switch (c.ClaimType)
+                    {
+                        case "m":
+                            type = "Medical";
+                            statColor = "lightpink";
+                            break; ;
+                        case "d":
+                            type = "Dental";
+                            break;
+                        case "v":
+                            type = "Vision";
+                            break;
+                        case "x":
+                            type = "Drug";
+                            break;
+                        default:
+                            type = "Unknown";
+                            break;
+
+                    }
+
+                        <tr style="color:dodgerblue">
+                            <td style="color:goldenrod">
+                                Claim  Identification:
+                            </td>
+                            <td style="color:goldenrod">
+                                Status:
+                            </td>
+                            <td style="color:goldenrod">
+                                Type:
+                            </td>
+                            <td style="color:goldenrod">
+                                Customer Plan:
+                            </td>
+                        </tr>
+                    <tr>
+                        <td>
+                            @c.ClaimIdNumber
+                        </td>
+                        <td style="@statColor">
+                            @c.ClaimStatus
+                        </td>
+                        <td>
+                            @type
+                        </td>
+                        <td>
+                            @plan
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color:lawngreen">Patient</td>
+                        <td style="color:lawngreen">Service Date</td>
+                        <td style="color:lawngreen">Clinic</td>
+                        <td style="color:lawngreen">Doctor</td>
+                    </tr>
+
+                    var name = c.PatientFirst + " " + c.PatientLast;
+
+                    var dos = c.DateService.ToString();
+                    dos = dos.Substring(0, dos.IndexOf(" "));
+
+                    var defaultDate = "1/1/1753";
+                    stay = "";
+
+                    var confine = c.DateConfine.ToString();
+                    confine = confine.Substring(0, confine.IndexOf(" "));
+                    // date not entered check
+                    confine = (confine == defaultDate) ? "n/a" : confine;
+
+                    var release = c.DateRelease.ToString();
+                    release = release.Substring(0, release.IndexOf(" "));
+                    // date not entered check
+                    release = (release == defaultDate) ? "n/a" : release;
+
+
+                    // show line if one or both dates present.
+                    // always show line for consistency
+                    var showHeader = true;
+                    //var showHeader = confine != defaultDate || release != defaultDate;
+                    var na = "n/a";
+
+                
+
+                    // show stay if both present - calculate stay
+                    var empty = "";
+                    if (confine != na && release != na &&
+                        confine != empty && release != empty &&
+                        c.DateRelease >= c.DateConfine)
+                    {
+                        showHeader = true;
+                        DateTime confine1 = (DateTime)c.DateConfine;
+                        DateTime release1 = (DateTime)c.DateRelease;
+
+                        TimeSpan numberOfDays = release1 - confine1;
+                        var strDays = numberOfDays.ToString("%d");
+                        // bump up by 1 for partial days...
+                        strDays = (Int32.Parse(strDays) + 1).ToString();
+                        var lit = (strDays == "1") ? "day" : "days";
+                        stay = strDays + " " + lit;
+                    }
+
+
+                    c.Procedure2 = c.Procedure2.Trim();
+
+                    var procedures = "none";
+                    // var status = "unknown";  // was removed see orig code
+                    if (c.Procedure1 != "") { procedures = c.Procedure1; }
+                    if (c.Procedure2 != "" && c.Procedure2 != "none") { procedures = procedures + " " + c.Procedure2; }
+                    // not used if (c.Procedure3 != "" && c.Procedure3 != "none") { procedures = procedures + " " + c.Procedure3; }
+
+                    var service = c.Service;
+
+                    var claimAdded = c.DateAdded;
+                    <tr>
+
+                        <td style="color:yellow">
+                            @name
+                        </td>
+                        <td style="color:white">
+                            @dos
+                        </td>
+                        <td>@c.Clinic<text>
+                        <td>@c.Physician</td>
+                    </tr>
+
+                    var diag = "";
+                    c.Diagnosis2 = c.Diagnosis2.Trim();
+                    if (c.Diagnosis1 != "") { diag = c.Diagnosis1; }
+                    if (c.Diagnosis2 != "" && c.Diagnosis2 != "none") { diag += c.Diagnosis2; }
+                    <tr>
+                        <td style="color:darkorange">Procedure:</td>
+                        <td style="color:darkorange">Diagnosis:</td> 
+                        <td style="color:gold">Service:</td>
+                        <td style="color:darkorange">Note:</td>
+                    </tr>
+                    @if (c.ClaimDescription.Trim() == "")
+                    {
+                        c.ClaimDescription = "none";
+                    }
+                    <tr>
+                        <td>@procedures</td>
+                        <td>@diag</td>
+                        <td>@service</td>
+                        <td>@c.ClaimDescription</td>
+                    </tr>
+                    <tr>
+                        <td style="color:aqua">Submitted Charge:</td>
+                        <td style="color:aqua">Plan Covered:</td>
+                        <td style="color:aqua">Balance Owed:</td>
+                        <td style="color:aqua">Payment Method:</td>
+                        <td style="color:aqua">Location:</td>
+                        <td style="color:aqua">Referral:</td>
+                    </tr>
+                    <tr>
+                        <td style="color:white">$@c.TotalCharge</td>
+                        <td style="color:white">$@c.CoveredAmount</td>
+                        <td style="color:white">$@c.BalanceOwed</td>   
+                        <td style="color:white">@c.PaymentAction</td>
+                        <td style="color:white">@c.Location</td>  
+                        <td style="color:white">@c.Referral</td>
+                    </tr>
+
+                    if (c.ClaimType == "m" && showHeader == true)
+                    {
+                        <tr>
+                            <td style="color:goldenrod`">Confinement Began:</td>
+                            <td style="color:goldenrod">Released:</td>
+                            <td style="color:goldenrod">Length Stay:</td>
+                        </tr>
+                        <tr>
+                            <td>@confine</td>
+                            <td>@release</td>
+                            <td>@stay</td>
+                        </tr>
+                    }
+
+                    if (c.ClaimType == "d")
+                    {
+                        <tr>
+                            <td>Tooth Number:</td>
+                        </tr>
+                        <tr>
+                            <td>@c.ToothNumber</td>
+                        </tr>
+                    }
+
+                    if (c.ClaimType == "v")
+                    {
+                        <tr>
+                            <td>Eye Equipment:</td>
+                        </tr>
+                        <tr>
+                            <td>@c.Eyeware</td>
+                        </tr>
+                    }
+
+                    if (c.ClaimType == "x")
+                    {
+                        <tr>
+                            <td>Prescription Drug:</td>
+                        </tr>
+                        <tr>
+                            <td>@c.DrugName</td>
+                        </tr>
+                    }
+
+                    <!-- if claim paid show paid date and amount -->
+
+                    var claimPaid = (c.ClaimStatus.Trim() == "Paid");
+                    if (claimPaid)
+                    {
+                        var value = c.PaymentDate.ToString();
+                        var paymentDate  = value.Substring(0, value.IndexOf(" "));
+                        <tr>
+                            <td style="color:lawngreen">Payment Amount</td>
+                            <td style="color:lawngreen">Date</td>
+                            <td style="color:lawngreen">Payment Plan</td>
+                        </tr>
+                        <tr> 
+                            <td>$@c.PaymentAmount</td>
+                            <td>@paymentDate</td>
+                            <td>@c.PaymentPlan</td>
+                        </tr>
+
+                    }
+
+                    <!-- if adjustment/adjusted add this line-->
+
+                    var adjustment = (c.ClaimStatus.Trim() == "Adjustment");
+                    if (adjustment)
+                    {
+                        var action = "Adjustment";
+                        var date = "on";
+                        var what = "of claim";
+
+                        var value = c.DateAdded.ToString();
+                        var dateAdded = value.Substring(0, value.IndexOf(" "));
+                        <tr>
+                            <td style="color:goldenrod">@action</td>
+                            <td style="color:goldenrod">@date</td>
+                            <td style="color:goldenrod">@what</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>@dateAdded</td>
+                            <td>@c.AdjustedClaimId</td>
+                        </tr>
+                    }
+                    var adjusted = (c.ClaimStatus.Trim() == "Adjusted");
+                    if (adjusted)
+                    {
+
+                        var value = c.AdjustedDate.ToString();
+                        var adjustedDate = value.Substring(0, value.IndexOf(" "));
+
+                        var action = "Claim Adjusted";
+                        var date = "on";
+                        var what = "with adjustment";
+                        <tr>
+                            <td style="color:goldenrod">@action</td>
+                            <td style="color:goldenrod">@date</td>
+                            <td style="color:goldenrod">@what</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>@adjustedDate</td>
+                            <td>@c.AdjustingClaimId</td>
+                        </tr>
+                    }
+
+                    <!-- build action line -->
+                    c.ClaimStatus = c.ClaimStatus.Trim();
+                    // Paid or Adjustment are similar.
+                    // allow entered claims to be adjusted even if not paid.
+                    var allowPay = (c.ClaimStatus == "Entered" || c.ClaimStatus == "Adjustment");
+                    var allowAdjustment = (c.ClaimStatus == "Entered" || c.ClaimStatus == "Adjustment");
+
+                    anyOfAbove = allowAdjustment || allowPay;
+                    var adjust = "adjust" + c.ClaimIdNumber;
+                    var pay = "pay..." + c.ClaimIdNumber;
+
+                    // index into the claim array
+                    // controller will fish out the id AdjustButton
+                    // and read the AdjustValue to
+                    // select the claim to be adjusted.
+                    // The claim data will be passed to the claim
+                    // method of the controller to start the adjustment
+                    // process.
+
+                    if (anyOfAbove)
+                    {
+                        var q = "'";
+                        var cId = @q + c.ClaimIdNumber.Trim() + q;
+
+                        <tr>
+                            @if (allowPay)
+                            {
+                                <td>
+                                    <button value=@pay
+                                            name="sub"
+                                            type="button"
+                                            class="btn btn-outline-warning"
+                                            onclick="InputPayment(@cId)">
+                                        Pay Claim
+                                    </button>
+                                </td>
+                            }
+                            @if (allowAdjustment)
+                            {
+                                <td>
+                                    <button value=@adjust
+                                            name="sub"
+                                            type="submit"
+                                            class="btn btn-outline-warning">
+                                        Adjust
+                                    </button>
+                                </td>
+                            }
+
+                            <td>
+
+                                @Html.ActionLink("Return", "Menu", "Home", null, new { @class = "btn btn-outline-primary" })
+
+                            </td>
+                        </tr>
+                    }
+
+
+
+                }
+
+            }
+
+        </tbody>
+    </table>
+    <br />
+
+    var showLink = !anyOfAbove;
+
+    @if (showLink)
+    {
+
+
+        @Html.ActionLink("Return", "Update", "Home", null, new { @class = "btn btn-outline-primary" })
+
+    }
+}
+
+
+
+

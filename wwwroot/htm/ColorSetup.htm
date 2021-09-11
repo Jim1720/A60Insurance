@@ -1,0 +1,74 @@
+﻿
+<script>
+
+// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+// for details on configuring this project to bundle and minify static web assets.
+
+// Write your JavaScript code.
+
+    // sets colors for screen 
+
+     
+    $(document).ready(function () { 
+         
+        // does this screen support styles and colors ?
+        var onClaimScreen = false;
+        var onRegisterScreen = false;
+        // container name=<screen>Container will signal screen in operation now. use id if not working.
+        var onUpdateScreen = document.getElementById("UpdateScreen");
+        var onClaimScreen = document.getElementById("ClaimScreen"); 
+        var onStyledScreen = onClaimScreen || onUpdateScreen;
+
+        if (!onStyledScreen) {
+
+            return;
+
+        } 
+
+        // set screen color values.
+        setColors();
+
+    });
+     
+
+       
+
+    function setColors() { 
+         
+        /* set left margin for claim register and update screens */
+        var claimMarginLeft = 0; // "50px";
+        var registerMarginLeft = 0; // "135px";
+        var marginLeft = "";
+        var onClaimScreen = document.getElementById("ClaimScreen");
+        // this applies to the style classes bg-outline, bg-solid etc.
+        marginLeft = (onClaimScreen) ? claimMarginLeft : registerMarginLeft;
+        
+        // use window.onload to make sure parsing complete for 
+        // this to work.
+         
+        let root = document.documentElement;
+        var outline = "bg-outline";
+        var solid = "bg-solid"; 
+        // razor puts appropriate externalClass in the container class.
+        var divClassElement = document.getElementById("FormStyleClass");
+        var divClass = divClassElement.className; 
+        if (divClass == outline || divClass == solid) {
+             
+            // sold and outline color when appropriate
+            // razor puts screen style object values in those fields.
+            var userColor = document.getElementById("userColor").value;
+            var headerColor = document.getElementById("headerColor").value;
+            var labelColor = document.getElementById("labelColor").value;
+            var messageColor = document.getElementById("messageColor").value; 
+
+            root.style.setProperty('--user-color', userColor);
+            root.style.setProperty('--h-color', headerColor);
+            root.style.setProperty('--label-color', labelColor);
+            root.style.setProperty('--message-color', messageColor);
+            root.style.setProperty('--margin-left', marginLeft);  
+        } 
+
+ }; 
+
+
+</script>

@@ -1,0 +1,33 @@
+﻿ 
+    <script>
+// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+// for details on configuring this project to bundle and minify static web assets.
+
+// Write your JavaScript code.
+
+
+    // The plan select design lists a button and description for each plan.
+    // to correctly detect which button was clicked jquery must be used
+    // along with taghelper. (This is not Blazor!)
+
+    $(document).ready(function () {
+         
+
+    });
+
+     function planSelect(planName) {
+          
+         // put plan name in hidden field
+         var planElement = document.getElementById("hiddenPlan");  
+         planElement.value = planName;  
+
+         // controller will read field.
+         var s = document.getElementsByTagName("form"); 
+         s[0].submit();  
+     };
+
+
+ </script>
+
+
+

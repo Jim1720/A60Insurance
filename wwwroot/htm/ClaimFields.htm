@@ -1,0 +1,386 @@
+﻿
+<script>
+// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+// for details on configuring this project to bundle and minify static web assets.
+
+// Write your JavaScript code.
+
+ 
+    // This code turns fields on and off and sets a hidden type field
+    // when claim type buttons are clicked.
+
+    // StyleUpdate:
+
+    // pass @userColor and @intenalClass to match
+    // button colors to solid label color.
+
+    $(document).ready(function () {
+         
+
+        loadFunction();
+
+    });
+
+    function loadFunction() {
+
+        // first time: hidden type : empty - default to 'm' = medical.
+        // second for edit error: set to hidden type 
+
+        var hiddenType = document.getElementById('hiddenType').value; 
+
+        if (hiddenType == '' || hiddenType == null) {
+
+            useType = "m";
+
+        } else {
+
+            useType = hiddenType;
+        }
+        //alert("start setting type to: " + useType);
+        dt(useType);
+
+
+    }
+
+    function dMedical() {
+        // solve quotes in quotes issue 
+        dt("m");
+    }
+
+    function dDental() {
+        // solve quotes in quotes issue 
+        dt("d");
+    }
+
+
+    function dVision() {
+        // solve quotes in quotes issue 
+        dt("v");
+    }
+
+
+    function dDrug() {
+        // solve quotes in quotes issue 
+        dt("x");
+    }
+
+
+    //TODO: add 2 other d...() vision drug.
+
+    function dt(newTypeValue) {
+
+        // call with start to set initial button configuration on screen.
+
+        // the old type is in a hidden field so we can remove the old button
+        // the new type is passed from the clicked button so we can add the new button
+
+        // note: collapse did not work for non-tr elements and button can not be put 
+        // in tr.
+
+        // how this works: remove the old-selected-type and add old-delected-type
+        // remove new-deselected and add new selected 
+
+        // initially add 1 med selected and 3 deselected other types.
+
+        var hiddenType = document.getElementById('hiddenType');  
+
+        //alert('dt: currentTypeValue  --> .' + currentTypeValue + '. --> .' + newTypeValue + '.'); 
+
+        try { 
+             
+
+            if (newTypeValue === "m" || newTypeValue === "d"
+             || newTypeValue === "v" || newTypeValue === "x") {
+                 
+            } else {
+                alert("ClaimFields script: invalid type to script: " + value);
+                return;
+            } 
+             
+
+            /* active buttons have class ab  that will be set to label color */
+            /* inactive buttons have class ib that will be set to gray */
+            
+            var medicalButtonSelected = '<button id="medButton" type="button" class="btn st1 b1 btn-danger">Medical</button>';  
+            var medicalButtonDeselected = '<button onclick="dMedical()" id="medButton2" type="button" class="btn st1 b1 btn-outline-danger">Medical</button>'; 
+              
+            var dentalButtonSelected = '<button id="denButton" type="button" class="btn st1 b1 btn-primary">Dental</button>';
+            var dentalButtonDeselected = '<button onclick="dDental()" id="denButton2" type="button" class="btn st1 b1 btn-outline-primary">Dental</button>';
+
+
+            var visionButtonSelected = '<button id="visButton" type="button" class="btn st1 b1 btn-warning">Vision</button>';
+            var visionButtonDeselected = '<button onclick="dVision()" id="visButton2" type="button" class="btn st1 b1 btn-outline-warning">Vision</button>';
+             
+
+            var drugButtonSelected = '<button id="drgButton" type="button" class="btn st1 b1 btn-success">Drug</button>';
+            var drugButtonDeselected = '<button onclick="dDrug()" id="drgButton2" type="button" class="btn st1 b1 btn-outline-success">Drug</button>';
+
+            var somethingWentWrong = "<p>Something went wrong bad type. </p>"; 
+           
+
+            switch (newTypeValue) {
+
+                case 'm': 
+
+                    $("#typebuttons").empty();
+                    $("#typebuttons").append(medicalButtonSelected); 
+                    $("#typebuttons").append(dentalButtonDeselected);  
+                    $("#typebuttons").append(visionButtonDeselected); 
+                    $("#typebuttons").append(drugButtonDeselected); 
+                    break;
+
+                case 'd': 
+
+                    $("#typebuttons").empty();
+                    $("#typebuttons").append(medicalButtonDeselected);
+                    $("#typebuttons").append(dentalButtonSelected);  
+                    $("#typebuttons").append(visionButtonDeselected);
+                    $("#typebuttons").append(drugButtonDeselected);  
+                    break;
+
+                case 'v':
+
+                    $("#typebuttons").empty(); 
+                    $("#typebuttons").append(medicalButtonDeselected); 
+                    $("#typebuttons").append(dentalButtonDeselected);  
+                    $("#typebuttons").append(visionButtonSelected);  
+                    $("#typebuttons").append(drugButtonDeselected); 
+                    break;
+
+                case 'x':
+
+                    $("#typebuttons").empty(); 
+                    $("#typebuttons").append(medicalButtonDeselected); 
+                    $("#typebuttons").append(dentalButtonDeselected);  
+                    $("#typebuttons").append(visionButtonDeselected);  
+                    $("#typebuttons").append(drugButtonSelected); 
+                    break; 
+
+                default:
+
+                    $("#typebuttons").empty(); 
+                    $("#typebuttons").append(somethingWentWrong);
+                    break; 
+
+            }
+
+
+            // override button text color when style solid is used so we can see them.
+            // style update 
+
+            // ref: https://mariusschulz.com/blog/passing-net-server-side-data-to-javascript
+
+         
+             
+            // LOAD CLAIM TYPE INTO HIDDEN FIELD 
+            //("setting hiddenType to: " + newTypeValue);\
+
+            hiddenType.value = newTypeValue;
+
+            // different claim fields show by claim type.
+            SwitchTypefields(newTypeValue);
+
+            // different drop downs show by claim type.
+            SwitchServiceDropDowns(newTypeValue);
+           
+
+        } catch (err) {
+
+              alert("Claim Fields script error: " + err); 
+        }
+
+        function SwitchTypefields(value) {
+
+            //alert('switch type fields');
+
+            // style update 
+            var labelColor = getLabelColor();
+            var externalClass = getExternalClass();
+             
+
+            var confineLabel = document.getElementById('c1'); 
+            var confineDate = document.getElementById('c2');
+            var releaseLabel = document.getElementById('r1');
+            var releaseDate = document.getElementById('r2');
+            var toothLabel = document.getElementById('t1');
+            var toothDate = document.getElementById('t2');
+            var eyewareLabel = document.getElementById('e1');
+            var eyewareDate = document.getElementById('e2');
+            var drugLabel = document.getElementById('a1');
+            var drugDate = document.getElementById('a2');
+
+            //alert('define');
+            var showMed = (value === "m");
+            var showDen = (value === "d");
+            var showVis = (value === "v");
+            var showDrg = (value === "x");
+
+            // visiate the controls (new word!)
+            // MDN says use display none vs inine
+
+            //alert('set med');
+           
+            confineLabel.style.display = showMed ? 'inline' : 'none';
+            confineDate.style.display = showMed ? 'inline' : 'none';
+            releaseLabel.style.display = showMed ? 'inline' : 'none';
+            releaseDate.style.display = showMed ? 'inline' : 'none';
+
+            //alert('set den');
+            toothLabel.style.display = showDen ? 'inline' : 'none';
+            toothDate.style.display = showDen ? 'inline' : 'none';
+
+            //alert('set vis');
+            eyewareLabel.style.display = showVis ? 'inline' : 'none';
+            eyewareDate.style.display = showVis ? 'inline' : 'none';
+
+            //alert('set drg');
+            drugLabel.style.display = showDrg ? 'inline' : 'none';
+            drugDate.style.display = showDrg ? 'inline' : 'none';
+
+            //alert('done');
+
+            if (externalClass == "bg-image") {
+
+                // align type field labels to white when picture shows in background.
+                var defaultLabelColorForPicture = "white";
+
+                switch (value) {
+
+                    case "m": confineLabel.style.color = defaultLabelColorForPicture;
+                        releaseLabel.style.color = defaultLabelColorForPicture;
+                        break;
+                    case "d": toothLabel.style.color = defaultLabelColorForPicture; break;
+                    case "v": eyewareLabel.style.color = defaultLabelColorForPicture; break;
+                    case "x": drugLabel.style.color = defaultLabelColorForPicture; break;
+                    default: break;
+                }
+
+            }
+             
+            debugger; 
+            if (externalClass == "bg-solid") {
+
+                // align type field labels to solid background color so we can see them.
+                 
+                switch (value) {
+
+                    case "m": confineLabel.style.color = labelColor;
+                              releaseLabel.style.color = labelColor;
+                              break;
+                    case "d": toothLabel.style.color = labelColor; break;
+                    case "v": eyewareLabel.style.color = labelColor; break;
+                    case "x": drugLabel.style.color = labelColor; break;
+                    default: break; 
+                }
+
+            }
+
+            debugger;
+            if (externalClass == "bg-image") {
+
+                // align type field labels to solid background color so we can see them.
+                var whiteColor = "white";
+                switch (value) {
+
+                    case "m": confineLabel.style.color = whiteColor;
+                        releaseLabel.style.color = whiteColor;
+                        break;
+                    case "d": toothLabel.style.color = whiteColor; break;
+                    case "v": eyewareLabel.style.color = whiteColor; break;
+                    case "x": drugLabel.style.color = whiteColor; break;
+                    default: break;
+                }
+
+            }
+        }
+
+
+        function SwitchServiceDropDowns(value) {
+
+            // filter allServices items into Service items by claim type  
+
+            var m1 = document.getElementById('m1');  
+            var m2 = document.getElementById('m2');  
+            var d1 = document.getElementById('d1');  
+            var d2 = document.getElementById('d2');  
+            var v1 = document.getElementById('v1');
+            var v2 = document.getElementById('v2');
+            var x1 = document.getElementById('x1');
+            var x2 = document.getElementById('x2');
+
+             
+            var showMed = (value === "m");
+            var showDen = (value === "d");
+            var showVis = (value === "v");
+            var showDrg = (value === "x");
+             
+            // visiate the controls (new word!)
+            // MDN says use display none vs inine
+            m1.style.display = showMed ? 'inline' : 'none'; 
+            m2.style.display = showMed ? 'inline' : 'none';
+            d1.style.display = showDen ? 'inline' : 'none'; 
+            d2.style.display = showDen ? 'inline' : 'none';
+            v1.style.display = showVis ? 'inline' : 'none';
+            v2.style.display = showVis ? 'inline' : 'none';
+            x1.style.display = showDrg ? 'inline' : 'none'; 
+            x2.style.display = showDrg ? 'inline' : 'none';
+             
+            debugger;
+
+            // style update 
+            var labelColor = getLabelColor(); 
+            var externalClass = getExternalClass();
+
+             
+            if (externalClass == "bg-solid") {
+
+                // align drop down labels to solid background color so we can see them.
+                 
+                switch (value) {
+
+                    case "m": m1.style.color = labelColor; break; 
+                    case "d": d1.style.color = labelColor; break;
+                    case "v": v1.style.color = labelColor; break;
+                    case "x": x1.style.color = labelColor; break;
+                    default: break;
+                }
+
+            }
+
+            if (externalClass == "bg-image") {
+
+                // align drop down labels to solid background color so we can see them.
+                var whiteColor = "white";
+                switch (value) {
+
+                    case "m": m1.style.color = whiteColor; break;
+                    case "d": d1.style.color = whiteColor; break;
+                    case "v": v1.style.color = whiteColor; break;
+                    case "x": x1.style.color = whiteColor; break;
+                    default: break;
+                }
+
+            }
+        }
+
+        function getExternalClass() {
+
+            debugger;
+            let root = document.documentElement;
+            var divClassElement = document.getElementById("FormStyleClass");
+            var externalClass = divClassElement.className;
+            return externalClass;
+        }
+
+        function getLabelColor() {
+
+            debugger;
+            let root = document.documentElement; 
+            var labelColor = document.getElementById("labelColor").value;
+            return labelColor;
+
+        }
+    } 
+
+</script>
+

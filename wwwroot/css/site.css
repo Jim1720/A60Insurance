@@ -159,3 +159,5 @@ b1:hover {
     --h-color: goldenrod;
     --margin-left: 10px; 
 }
+
+.r1 { border-radius: 25px; }

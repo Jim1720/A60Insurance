@@ -161,3 +161,98 @@ b1:hover {
 }
 
 .r1 { border-radius: 25px; }
+
+
+.g1menu {
+    color: aqua;
+    border-color: white;
+    margin-left: 20px;
+}
+
+.g2pay {
+    color: yellow;
+    border-color: white;
+    margin-left: 20px;
+}
+
+.g3adjust {
+    color: red;
+    border-color: white;
+    margin-left: 20px;
+}
+
+.g4stay {
+    color: lightgreen;
+    border-color: white;
+    margin-left: 20px;
+}
+
+
+.g4 {
+    color: lightgreen;
+    border-color: white;
+    margin-left: 20px;
+}
+
+
+.g4focus {
+    color: burlywood;
+    border-color: white;
+    margin-left: 20px;
+}
+
+
+.g4top {
+    color: lightgreen;
+    border-color: white;
+    margin-left: 20px;
+}
+
+
+.g4mid {
+    color: burlywood;
+    border-color: white;
+    margin-left: 20px;
+}
+
+
+.g4bot {
+    color: lightcoral;
+    border-color: white;
+    margin-left: 20px;
+}
+
+
+.g4focus {
+    color: burlywood;
+    border-color: white;
+    margin-left: 20px;
+}
+
+
+
+g5new {
+    color: burlywood;
+    border-color: white;
+    margin-left: 20px;
+}
+
+
+
+
+.g5act1 {
+    color: burlywood;
+    border-color: white;
+    margin-left: 20px;
+}
+
+
+.g5act2 {
+    color: burlywood;
+    border-color: white;
+    margin-left: 20px;
+}
+
+html {
+    scroll-behavior: smooth;
+}

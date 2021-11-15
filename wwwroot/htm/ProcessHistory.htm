@@ -1,0 +1,137 @@
+﻿ 
+<script>
+     
+
+    $(document).ready(function () {
+     
+
+        // are we on history screen
+        var onHistory = document.getElementById("focusedClaimId");
+        if (onHistory == null) {
+            return;
+        } 
+
+        // do we have a focused claim id to jump to or focus on...
+         
+
+        var focusedClaimId = $('#focusedClaimId').attr("Value"); 
+
+        if (focusedClaimId == null && focusedClaimId == undefined && focusedClaimId == "") {
+        
+            return;
+        }
+
+        // ref: https://stackoverflow.com/questions/2820086/javascript-find-and-scroll-to-text
+         
+
+        var a = focusedClaimId; 
+         
+
+        $(window).scrollTop($("*:contains('" + a + "'):last").offset().top);
+
+
+        // reset turn off.
+        $('#focusedClaimId').attr("Value", "");
+         
+         
+
+    });
+
+
+    function scrollToTop() {
+
+        $(window).scrollTop($("#top").offset().top);
+    }
+
+    function scrollToMid() { 
+
+        $(window).scrollTop($("#mid").offset().top);
+    }
+
+
+    function scrollToBot() {
+
+        $(window).scrollTop($("#bot").offset().top);
+    }
+
+
+    function toggleStay() {
+         
+        var stayValue = $('#stayButton').attr("Value");  
+        var lit = (stayValue == "stay on") ? "stay off" : "stay on"; // reverse lit 
+        // ------------------------- replace html buttons with ------------------------------------
+        var newStay = ' <button id="stayButton" type="button" ' +
+                       "class='g4stay btn btn-outline-primary' " +
+                       "onclick = toggleStay() " +  
+                       "value='" + lit + "'" + ">" +
+                       lit
+                       '</button >';
+        //------------------------------------------------------------------------------------------
+        $('.g4stay').replaceWith(newStay);
+        var litValue = lit.includes("on") ? "on" : "off";
+        ajax("stay", litValue);
+        return;  
+    } 
+
+    function toggleFocus() {
+
+        var focusValue = $('#focusButton').attr("Value");
+        var lit = (focusValue == "focus on") ? "focus off" : "focus on"; // reverse lit 
+        // ------------------------- replace html buttons with ------------------------------------
+        var newFocus = ' <button id="focusButton" type="button" ' +
+            "class='g4focus btn btn-outline-primary' " +
+            "onclick = toggleFocus() " +
+            "value='" + lit + "'" + ">" +
+            lit
+        '</button >';
+        //------------------------------------------------------------------------------------------
+        $('.g4focus').replaceWith(newFocus); 
+        var litValue = lit.includes("on") ? "on" : "off";
+        ajax("focus", litValue);
+        return;
+    }
+
+    function ajax(useName, useState)
+    {
+
+
+        settingsData = { Name: useName, State: useState };  //  name = focus, stay     state =   on, off
+         
+        var json = JSON.stringify(settingsData);
+
+        controllerUrl = location.origin +  "/settings"; 
+
+        $.ajax(
+        {
+                type: "POST",
+                async: true,
+                url: controllerUrl,
+                data: json,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                   //console.log("ajax call success.")
+                },
+                error: function (msg) {
+
+                    console.log("ajax call failure " + msg);
+                    console.log("controllerUrl " + controllerUrl);
+
+                    console.log("status: " + msg['status']);
+                    console.log("responseText: " + msg['responseText']); 
+
+                }
+        });
+    }
+
+    function gotoBottom() {
+
+        // position screen at bottom.
+        // href buttons did not respond to 1st click : workaround here.
+        $(window).scrollTop($('#bot').offset().top);
+
+    }
+
+     
+
+</script>

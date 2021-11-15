@@ -48,7 +48,15 @@ namespace A60Insurance.Controllers
 
         private readonly IScreenStyleManager _screenStyleManager;
         private readonly IScreenStyleList _screenStyleList;
-        private readonly IScreenStyleFactory _screenStyleFactory; 
+        private readonly IScreenStyleFactory _screenStyleFactory;
+
+        private readonly IHistorySettings _historySettings;
+        private readonly IActionInformation _actionInformation;
+
+        private string _useStay;
+        private string _useFocus;
+        private string _useNav;
+        private string _useActions;
 
         public HomeController(System.Net.Http.IHttpClientFactory factory,
                               ILogger<HomeController> logger,
@@ -56,7 +64,10 @@ namespace A60Insurance.Controllers
                               IConfiguration configuration,
                               IScreenStyleManager screenStyleManager,
                               IScreenStyleList screenStyleList,
-                              IScreenStyleFactory screenStyleFactory)
+                              IScreenStyleFactory screenStyleFactory,
+                              IHistorySettings historySettings,
+                              IActionInformation actionInformation
+                              )
         { 
             _logger = logger;
             _factory = factory;
@@ -82,7 +93,18 @@ namespace A60Insurance.Controllers
             /* style and color related objects */
             _screenStyleManager = screenStyleManager;
             _screenStyleList = screenStyleList;
-            _screenStyleFactory = screenStyleFactory; 
+            _screenStyleFactory = screenStyleFactory;
+
+            /* history screen focus, stay settings and action records for adjustements and pays */ 
+            _historySettings = historySettings;
+            _actionInformation = actionInformation;
+
+            _useStay = getVar("UseStay");
+            _useFocus = getVar("UseFocus");
+            _useNav = getVar("UseNav");
+            _useActions = getVar("UseActions");
+
+           
         }
 
         protected string getVar(string key)
@@ -105,6 +127,9 @@ namespace A60Insurance.Controllers
         public IActionResult Index()
         {
             _logger.LogInformation("*** showing index. ****");
+
+            ViewData["browser"] = Request.Headers["User-Agent"].ToString(); 
+
             return View();
         }
 
@@ -130,10 +155,7 @@ namespace A60Insurance.Controllers
             { 
 
                 ViewData["MenuMessage"] = msg;
-            } 
-
-
-           
+            }  
 
             return View();
         }
@@ -1443,8 +1465,10 @@ namespace A60Insurance.Controllers
                 adjustedClaim.Diagnosis2 = adjustedClaim.Diagnosis2.Trim();
                 adjustedClaim.Physician = adjustedClaim.Physician.Trim();
                 adjustedClaim.Clinic = adjustedClaim.Clinic.Trim();
-                adjustedClaim.Location = adjustedClaim.Location.Trim();
-                adjustedClaim.PaymentAction = adjustedClaim.PaymentAction.Trim();
+                adjustedClaim.Location = "";
+                adjustedClaim.PaymentAction = "";
+               // adjustedClaim.Location = adjustedClaim.Location.Trim();
+              //  adjustedClaim.PaymentAction = adjustedClaim.PaymentAction.Trim();
                
 
                 var newAdjustmentId = DateTime.Now.ToString("CL-MM-dd-yy-H:mm:ss");
@@ -1860,6 +1884,8 @@ namespace A60Insurance.Controllers
             claim.ServiceItem = "";
             claim.AppAdjusting = "";
             claim.Procedure3 = "";
+            if(claim.Location == null) { claim.Location = ""; }  
+            if(claim.Referral == null) { claim.Referral = ""; }
 
 
 
@@ -2016,9 +2042,15 @@ namespace A60Insurance.Controllers
                 }
                 // reset to null so claim screen is ok.
                 TempData["adjustedClaimId"] = null;
+                // store focused claim
+                TempData["focusedClaimId"] = claim.ClaimIdNumber; // focus on adjustment.
                 TempData.Keep();
 
-                adjMessage = adjustedClaimId + " adjusted claim " + claim.ClaimIdNumber;
+                adjMessage = claim.ClaimIdNumber + " adjusted claim " + adjustedClaimId;
+
+
+                // store action
+                _actionInformation.setAction("Adjustment", claim.ClaimIdNumber); 
 
             }
 
@@ -2031,8 +2063,19 @@ namespace A60Insurance.Controllers
             TempData["MenuMessage"] = useMessge;
             TempData.Keep();
 
-            int updatedClaimCount = await AddClaimCount(custId);  
+            int updatedClaimCount = await AddClaimCount(custId); 
 
+            // check stay option on history
+            var stayOnHistory = _historySettings.getStay();
+            var usingStayEnv = _useStay == "Y"; // environment
+            if (adjustment && stayOnHistory && usingStayEnv)
+            {
+                return RedirectToAction("history");
+            }
+            // focus not used in this case
+            // clear it only used with immediate return (stay) to history.
+            TempData["focusedClaimId"] = "";
+            TempData.Keep();
             // return to main menu - hub.
             return RedirectToAction("menu");
         }
@@ -2251,9 +2294,9 @@ namespace A60Insurance.Controllers
             _logger.LogInformation("add claim completed");
             return response;
         }
-         
+
         [HttpGet]
-        public async Task<ActionResult<ClaimsHistory>>History()
+        public async Task<ActionResult<ClaimsHistory>> History()
         {
 
             // verify proper signin
@@ -2281,15 +2324,67 @@ namespace A60Insurance.Controllers
             _tagHelperComponentManager.Components.Add(
                    new ClaimScreenBodyTagHelper());
 
-            ClaimsHistory ch = await ReadClaimHistory(custId); 
+            // pick up history settings
+            var boolStay = _historySettings.getStay();
+            var boolFocus = _historySettings.getFocus();
+
+            // focus and stay settings 
+            ViewData["FocusSetting"] = (boolFocus) ? "focus on" : "focus off";
+            ViewData["StaySetting"] = (boolStay) ? "stay on" : "stay off";
+
+            // pass action data to fill action buttons
+            (string claim1, string act1) = _actionInformation.getAction(1);
+            (string claim2, string act2) = _actionInformation.getAction(2);
+            var dash = "-";
+            ViewData["action1Literal"] = "";
+            ViewData["action2Literal"] = "";
+
+            if (claim1 != "")
+            {  
+                ViewData["action1Literal"] = act1.Substring(0, 3) + dash + claim1.Substring(claim1.Length - 2);
+                ViewData["claim1"] = claim1;
+            }
+            if (claim2 != "")
+            {
+                ViewData["action2Literal"] = act2.Substring(0, 3) + dash + claim2.Substring(claim2.Length - 2);
+                ViewData["claim2"] = claim2;
+            } 
+
+            // read and delete item.
+            var focusedClaimId = TempData["focusedClaimId"] as string;
+
+            // if focus button is on scroll to adjusted or paid claim.
+            if (boolFocus == true)
+            {
+                ViewData["FocusedClaimId"] = focusedClaimId;
+            }
+
+            // clear
+            TempData["FocusedClaimId"] = "";
+            TempData.Keep();
+
+
+            // read claim history and mark focused and action button claims
+            ClaimsHistory ch = await ReadClaimHistory(custId, focusedClaimId, claim1, claim2);
+
+            // environment vatiables to turn on buttons - these override settings and will not show buttons
+            // and work as a feature setting...
+            ViewData["useStay"] = _useStay;
+            ViewData["useFocus"] = _useFocus;
+            ViewData["useNav"] = _useNav;
+            ViewData["useAct"] = _useActions;
+
+            // show history cshtml.
             return View(ch);
               
         }
 
-        private async Task<ClaimsHistory> ReadClaimHistory(string custId)
+        private async Task<ClaimsHistory> ReadClaimHistory(string custId, string focusedClaimId,
+                                          string Action1Claim,
+                                          string Action2Claim)
         {
-             
- 
+
+
             ClaimsHistory claimsHistory = new ClaimsHistory();
 
             if (custId == null)
@@ -2328,7 +2423,7 @@ namespace A60Insurance.Controllers
             HttpContent content = m.Content;
             HttpStatusCode statusCode = m.StatusCode;
 
-            if(m.StatusCode.ToString() == "NotFound")
+            if (m.StatusCode.ToString() == "NotFound")
             {
                 ViewData["Message"] = "No Claims Found.";
             }
@@ -2338,13 +2433,28 @@ namespace A60Insurance.Controllers
                 return claimsHistory; // view name - error condition
             }
 
-            string json = await content.ReadAsStringAsync();  
-            var resultData = JsonConvert.DeserializeObject<List<Claim>>(json); 
-            foreach(var item in resultData)
+            string json = await content.ReadAsStringAsync();
+            var resultData = JsonConvert.DeserializeObject<List<Claim>>(json);
+            foreach (var item in resultData)
             {
                 Claim c = (Claim)item;
+                if(c.ClaimIdNumber.Trim() == focusedClaimId)
+                {
+                    c.focused = true;
+                }
+                if(c.ClaimIdNumber.Trim() == Action1Claim)
+                {
+                    c.action1 = true;
+                }
+                if (c.ClaimIdNumber.Trim() == Action2Claim)
+                {
+                    c.action2 = true;
+                }
                 claimsHistory.HistoryClaims.Add(c);
             }
+
+            
+
             return claimsHistory;
         }
 
@@ -2470,14 +2580,54 @@ namespace A60Insurance.Controllers
                     var b = paymentAmount;
                     anyMessage = $"Claim {a} was paid with ${b}";
 
+                    // store action
+                    _actionInformation.setAction("Payment", payClaimId);
+
+                    // store focused claim
+                    TempData["focusedClaimId"] = payClaimId ; // focus on adjustment.
+                    TempData.Keep();
+
                 }  
                 TempData["MenuMessage"] = anyMessage;
                 TempData.Keep();
+
+                // check stay option on history
+                var stayOnHistory = _historySettings.getStay();
+                var environmentUseStay = _useStay == "Y";
+                if(stayOnHistory && environmentUseStay)
+                {
+                    return RedirectToAction("history");
+                }
+
+                // focus not used in this case
+                // clear it only used with immediate return (stay) to history.
+                TempData["focusedClaimId"] = "";
+                TempData.Keep();
+
                 return RedirectToAction("Menu");
             }
 
             return View(ch);
         }
+
+        
+        [HttpPost("/settings")]
+        public IActionResult Settings([FromBody] SettingsData settingsData) 
+        {
+             
+            var name = settingsData.Name;
+            var state = settingsData.State == "on";
+            switch(name)
+            {
+                case "stay":  _historySettings.setStay(state); break;
+                case "focus": _historySettings.setFocus(state); break;
+                default: break;
+            }
+
+            return Ok("ok");
+        }
+        
+
         protected async Task<HttpResponseMessage> PayClaim(string ClaimId, string Amount)
         {
 
@@ -2914,7 +3064,28 @@ namespace A60Insurance.Controllers
                 output = "";
             }
             return output; 
-        } 
+        }
+
+        /* assist navigation <a> tag helpers to get to hrefs on page */
+        /* fixes: some clicks not working as intended on history page */
+
+        /* ref: (this did not work: used java script instead) Posted answer to stack overflow on following link:
+
+            https://stackoverflow.com/questions/44987922/a-asp-controller-with-asp-fragment-dont-work-and-causes-exception-in-console
+
+         */
+
+        public IActionResult RepositionPageToFragment(string fragment)
+        {
+            /* this function is not used */
+
+            //var pageLocation = @"\history#" + fragment;
+
+            //return Redirect(pageLocation);
+
+            return Redirect(Url.RouteUrl(new { controller = "Home", action = "history" } ) + "#"  + fragment );
+            
+        }
 
     }
 }

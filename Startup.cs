@@ -26,13 +26,17 @@ namespace A60Insurance
         {
             services.AddControllersWithViews();
 
-            services.AddHttpClient();
+            services.AddHttpClient(); 
 
             services.AddScoped<IScreenStyleFactory, ScreenStyleFactory>();
 
             services.AddScoped<IScreenStyleList, ScreenStyleList>();
 
             services.AddScoped<IScreenStyleManager, ScreenStyleManager>();
+
+            services.AddSingleton<IHistorySettings, HistorySettings>(); 
+
+            services.AddSingleton<IActionInformation, ActionInformation>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

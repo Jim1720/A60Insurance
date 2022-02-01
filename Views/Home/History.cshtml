@@ -394,14 +394,12 @@
 
                 <div class="row">
                     <div class="col-md-3 white">  Payment Amount:</div>
-                    <div class="col-md-3 white">  Date: </div>
-                    <div class="col-md-3 white">  Payment Plan: </div>
+                    <div class="col-md-3 white">  Date: </div> 
                 </div>
 
                 <div class="row">
-                    <div class="col-md-3 white">  $@c.PaymentAmount</div>
-                    <div class="col-md-3 white">  @paymentDate </div>
-                    <div class="col-md-3 white">  @c.PaymentPlan </div>
+                    <div class="col-md-3 dodgerblue">  $@c.PaymentAmount</div>
+                    <div class="col-md-3 dodgerblue">  @paymentDate </div> 
                 </div>
 
             } // end paid
@@ -494,7 +492,7 @@
                 @Html.ActionLink("Claim", "Claim", "Home", null, new
                 {
                     @class = "g5new btn btn-outline-primary",
-                                                                       @style = "margin-left: 25px; "
+                    @style = "margin-left: 25px; "
                 })
 
                 @{
@@ -510,7 +508,17 @@
                 @if (anyOfAbove)
                 {
                     var q = "'";
-                    var cId = @q + c.ClaimIdNumber.Trim() + q;
+                    var cId = @q + c.ClaimIdNumber.Trim() + q; 
+
+                    if (allowAdjustment) // can use hidden fields here if needed for focus or stay.
+                    {
+                        <button value=@adjust
+                                name="sub"
+                                type="submit"
+                                class="g3adjust btn btn-outline-warning">
+                            Adjust
+                        </button>
+                    }
 
                     if (allowPay)
                     {
@@ -520,17 +528,6 @@
                                 class="g2pay btn btn-outline-warning"
                                 onclick="InputPayment(@cId)">
                             Pay Claim
-                        </button>
-                    }
-
-
-                    @if (allowAdjustment) // can use hidden fields here if needed for focus or stay.
-                    {
-                        <button value=@adjust
-                                name="sub"
-                                type="submit"
-                                class="g3adjust btn btn-outline-warning">
-                            Adjust
                         </button>
                     }
 

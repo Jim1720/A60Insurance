@@ -43,30 +43,26 @@ namespace A60Insurance.Controllers
         private string _authEmail;
         private string _useStyles;
 
-        private readonly ITagHelperComponentManager _tagHelperComponentManager;
-        private readonly IConfiguration _configuration;
-
-        private readonly IScreenStyleManager _screenStyleManager;
-        private readonly IScreenStyleList _screenStyleList;
-        private readonly IScreenStyleFactory _screenStyleFactory;
-
-        private readonly IHistorySettings _historySettings;
-        private readonly IActionInformation _actionInformation;
-
         private string _useStay;
         private string _useFocus;
         private string _useNav;
         private string _useActions;
 
+
+        private readonly ITagHelperComponentManager _tagHelperComponentManager;
+        private readonly IConfiguration _configuration;
+
+        private readonly IScreenStyleManager _screenStyleManager;
+        private readonly IScreenStyleList _screenStyleList;
+        private readonly IScreenStyleFactory _screenStyleFactory; 
+ 
         public HomeController(System.Net.Http.IHttpClientFactory factory,
                               ILogger<HomeController> logger,
                               ITagHelperComponentManager tagHelperComponentManager,
                               IConfiguration configuration,
                               IScreenStyleManager screenStyleManager,
                               IScreenStyleList screenStyleList,
-                              IScreenStyleFactory screenStyleFactory,
-                              IHistorySettings historySettings,
-                              IActionInformation actionInformation
+                              IScreenStyleFactory screenStyleFactory 
                               )
         { 
             _logger = logger;
@@ -94,10 +90,7 @@ namespace A60Insurance.Controllers
             _screenStyleManager = screenStyleManager;
             _screenStyleList = screenStyleList;
             _screenStyleFactory = screenStyleFactory;
-
-            /* history screen focus, stay settings and action records for adjustements and pays */ 
-            _historySettings = historySettings;
-            _actionInformation = actionInformation;
+             
 
             _useStay = getVar("UseStay");
             _useFocus = getVar("UseFocus");
@@ -2021,6 +2014,9 @@ namespace A60Insurance.Controllers
                 return View(claim);
             }
 
+           
+            var action = "New";
+
             // stamp adjusted claim 
             var adjMessage = "";
             if(adjustment)
@@ -2038,47 +2034,187 @@ namespace A60Insurance.Controllers
                 {
                     ViewData["Message"] = "Serious error : stamp failed.";
                     EditReloadDropdowns(claim);
-                     View("Error");
+                    return View("Error");
                 }
                 // reset to null so claim screen is ok.
-                TempData["adjustedClaimId"] = null;
-                // store focused claim
-                TempData["focusedClaimId"] = claim.ClaimIdNumber; // focus on adjustment.
-                TempData.Keep();
+                TempData["adjustedClaimId"] = null; 
 
                 adjMessage = claim.ClaimIdNumber + " adjusted claim " + adjustedClaimId;
 
-
-                // store action
-                _actionInformation.setAction("Adjustment", claim.ClaimIdNumber); 
+                action = "Adjustment";
+             
 
             }
+
+            // store action
+            //_actionInformation.setAction(action, claim.ClaimIdNumber);
+            SetAction(action, claim.ClaimIdNumber);
+
+            // store focused claim for new and adjustment claims.
+            //TempData["focusedClaimId"] = claim.ClaimIdNumber; // focus on adjustment.
+            if (GetFocusOnButton() == true)
+            {
+                SetFocusedClaimIdNumber(claim.ClaimIdNumber);
+            }
+            //TempData.Keep();
 
             // The claim screen will post message for update screen once claim
             // filed or adjusted.
 
-            
+
             var newClaimMessage  = "Claim " + claim.ClaimIdNumber + " posted."; 
             var useMessge = (adjMessage.Length > 0) ? adjMessage : newClaimMessage;
             TempData["MenuMessage"] = useMessge;
             TempData.Keep();
 
-            int updatedClaimCount = await AddClaimCount(custId); 
+            int updatedClaimCount = await AddClaimCount(custId);
 
             // check stay option on history
-            var stayOnHistory = _historySettings.getStay();
+            //var stayOnHistory = _historySettings.getStay();
+            var stayOnHistory = GetSayOnButton();
             var usingStayEnv = _useStay == "Y"; // environment
-            if (adjustment && stayOnHistory && usingStayEnv)
+
+            // new and adjustment claims can stay on history....
+            if (stayOnHistory && usingStayEnv)
             {
                 return RedirectToAction("history");
             }
-            // focus not used in this case
-            // clear it only used with immediate return (stay) to history.
-            TempData["focusedClaimId"] = "";
-            TempData.Keep();
-            // return to main menu - hub.
-            return RedirectToAction("menu");
+
+            return RedirectToAction("menu"); 
+
         }
+
+        //*---------------------------------------------------------------------------
+        //* stay, focus and action features perssted in tempData between requests.
+        //*---------------------------------------------------------------------------
+
+        protected class ActionObject
+        {
+
+            public ActionObject(string Action, string ClaimIdNumber)
+            {
+                action = Action;
+                claimIdNumber = ClaimIdNumber;
+            }
+            
+            public string action { get; set; }
+            public string claimIdNumber { get; set; }
+        };
+
+        public void SetAction(string Action, string ClaimIdNumber)
+        { 
+
+            List<ActionObject> list = new List<ActionObject>();
+
+            // get current list from tempData 
+            String json = TempData.Peek("ActionList") as string; 
+            var listNotEmpty = json != null; 
+            if(listNotEmpty)
+            {
+                list = JsonConvert.DeserializeObject<List<ActionObject>>(json);
+            }
+
+            // list full - remove first entry
+            var capacity = 2;
+            if(list.Count >= capacity)
+            {
+                list.RemoveAt(0);
+            }
+
+            // add to it ... 
+            var newAction = new ActionObject(Action, ClaimIdNumber); 
+            list.Add(newAction);  
+
+            // replace list in tempData 
+            String jsonOutput = JsonConvert.SerializeObject(list);
+
+            TempData["ActionList"] = jsonOutput; 
+            TempData.Keep();
+
+        }
+
+
+
+        public (bool Found, string Action, string ClaimIdNumber) GetAction(int Number)
+        {
+            var notFound = (false, "", "");
+
+            List<ActionObject> list = new List<ActionObject>();
+
+            // get current list from tempData 
+            String json = TempData.Peek("ActionList") as string;
+            var listEmpty = json == null;
+            if (listEmpty)
+            {
+                return notFound;
+            } 
+             
+            list = JsonConvert.DeserializeObject<List<ActionObject>>(json);
+
+            var count = list.Count;
+
+            var fetchIndex = Number - 1;  // parm is 1 or 2 convert to list occurance...
+            
+            if(fetchIndex >= count)
+            {
+                return notFound;
+            }
+
+            return (true, list[fetchIndex].action, list[fetchIndex].claimIdNumber);
+
+        }
+
+        public void SetFocusedClaimIdNumber(string ClaimIdNumber)
+        {
+            TempData["FocusedClaimIdNumber"] = ClaimIdNumber;
+            TempData.Keep();
+        }
+
+        public (Boolean Found, string ClaimIdNumber) GetFocusedClaimIdNumber()
+        {
+            var claimId = TempData.Peek("FocusedClaimIdNumber") as string;
+            if (claimId == null)
+            {
+                return (false, "");
+            }
+            TempData["FocusedClaimIdNumber"] = "";
+            TempData.Keep("");
+
+            return (true, claimId); 
+        }
+
+        public void SetStayOnButton(bool value)
+        {
+            var stringValue = value == true ? "true" : "false";
+            TempData["StayOnButton"] = stringValue;
+            TempData.Keep();
+        }
+
+        public bool GetSayOnButton()
+        {
+            var stringValue = TempData["StayOnButton"] as string; 
+            TempData.Keep();
+             
+            if(stringValue == null) { return false;  } 
+            return stringValue == "true"; 
+        }
+
+        public void SetFocusOnButton(bool value)
+        {
+            var stringValue = value == true ? "true" : "false";
+            TempData["FocusOnButton"] = stringValue;
+            TempData.Keep();
+        }
+
+        public bool GetFocusOnButton()
+        {
+            var stringValue = TempData["FocusOnButton"] as string;
+            TempData.Keep();
+
+            if (stringValue == null) { return false; }
+            return stringValue == "true";
+        }
+
 
         protected void EditReloadDropdowns(Claim claim)
         {
@@ -2325,47 +2461,56 @@ namespace A60Insurance.Controllers
                    new ClaimScreenBodyTagHelper());
 
             // pick up history settings
-            var boolStay = _historySettings.getStay();
-            var boolFocus = _historySettings.getFocus();
+            //var boolStay = _historySettings.getStay();
+            var boolStay = GetSayOnButton();
+            //var boolFocus = _historySettings.getFocus();
+            var boolFocus = GetFocusOnButton();
 
             // focus and stay settings 
             ViewData["FocusSetting"] = (boolFocus) ? "focus on" : "focus off";
             ViewData["StaySetting"] = (boolStay) ? "stay on" : "stay off";
 
             // pass action data to fill action buttons
-            (string claim1, string act1) = _actionInformation.getAction(1);
-            (string claim2, string act2) = _actionInformation.getAction(2);
+            //(string claim1, string act1) = _actionInformation.getAction(1);
+            //(string claim2, string act2) = _actionInformation.getAction(2);
+            int firstAction = 1;
+            int secondAction = 2;
+
+            (bool found1, string act1, string claim1) = GetAction(firstAction); 
+            (bool found2, string act2, string claim2) = GetAction(secondAction);
+
             var dash = "-";
             ViewData["action1Literal"] = "";
             ViewData["action2Literal"] = "";
 
-            if (claim1 != "")
+            if (found1)
             {  
                 ViewData["action1Literal"] = act1.Substring(0, 3) + dash + claim1.Substring(claim1.Length - 2);
                 ViewData["claim1"] = claim1;
             }
-            if (claim2 != "")
+            if (found2)
             {
                 ViewData["action2Literal"] = act2.Substring(0, 3) + dash + claim2.Substring(claim2.Length - 2);
                 ViewData["claim2"] = claim2;
-            } 
+            }
 
             // read and delete item.
-            var focusedClaimId = TempData["focusedClaimId"] as string;
+            //var focusedClaimId = TempData["focusedClaimId"] as string;
+            (bool focusedClaimIdNumberFound, string focusedClaimIdNumber) = GetFocusedClaimIdNumber();
 
             // if focus button is on scroll to adjusted or paid claim.
-            if (boolFocus == true)
+            if (focusedClaimIdNumberFound)
             {
-                ViewData["FocusedClaimId"] = focusedClaimId;
+                ViewData["FocusedClaimId"] = focusedClaimIdNumber;
             }
 
             // clear
-            TempData["FocusedClaimId"] = "";
-            TempData.Keep();
+            //TempData["FocusedClaimId"] = "";
+            //TempData.Keep();
 
 
             // read claim history and mark focused and action button claims
-            ClaimsHistory ch = await ReadClaimHistory(custId, focusedClaimId, claim1, claim2);
+            ClaimsHistory ch = await ReadClaimHistory(custId, focusedClaimIdNumber, claim1, claim2);
 
             // environment vatiables to turn on buttons - these override settings and will not show buttons
             // and work as a feature setting...
@@ -2551,18 +2696,18 @@ namespace A60Insurance.Controllers
                 return RedirectToAction("Claim");
             }
             if (paymentUsed)
-            { 
+            {
 
                 // get payment amount - it was edited in the javascript for feedback to user...
                 // so its 'unused' or good value.
-                double payment = 0.0d; 
-                var good = double.TryParse(paymentAmount,  out payment);
-                if(!good)
+                double payment = 0.0d;
+                var good = double.TryParse(paymentAmount, out payment);
+                if (!good)
                 {
                     // just return to screen - edit was in java script.
-                    RedirectToAction("History"); // reload model.
-                } 
-                string standardMessage = "Claim " + payClaimId + " paid " + paymentAmount + "."; 
+                    return RedirectToAction("History"); // reload model.
+                }
+                string standardMessage = "Claim " + payClaimId + " paid " + paymentAmount + ".";
                 Task<HttpResponseMessage> m = PayClaim(payClaimId, payment.ToString());
                 if (m == null)
                 {
@@ -2573,26 +2718,35 @@ namespace A60Insurance.Controllers
 
                 System.Net.HttpStatusCode statusCode = m.Result.StatusCode;
                 var goodResult = statusCode.ToString() == "OK";
-                var anyMessage = "Pay:unexpected status code: " + statusCode.ToString();
-                if(goodResult)
+                var anyMessage = "";
+
+                if (!goodResult)
                 {
-                    var a = payClaimId;
-                    var b = paymentAmount;
-                    anyMessage = $"Claim {a} was paid with ${b}";
-
-                    // store action
-                    _actionInformation.setAction("Payment", payClaimId);
-
-                    // store focused claim
-                    TempData["focusedClaimId"] = payClaimId ; // focus on adjustment.
+                    anyMessage = "Pay:unexpected status code: " + statusCode.ToString();
+                    TempData["MenuMessage"] = anyMessage;
                     TempData.Keep();
+                    return RedirectToAction("Menu");
+                }
 
-                }  
-                TempData["MenuMessage"] = anyMessage;
-                TempData.Keep();
+                var a = payClaimId;
+                var b = paymentAmount;
+                anyMessage = $"Claim {a} was paid with ${b}";
+
+                // store action
+                // _actionInformation.setAction("Payment", payClaimId);
+                SetAction("Payment", payClaimId);
+
+                // store focused claim
+                //TempData["focusedClaimId"] = payClaimId ; // focus on adjustment.
+                //TempData.Keep();
+                if (GetFocusOnButton() == true)
+                {  
+                    SetFocusedClaimIdNumber(payClaimId);
+                }
 
                 // check stay option on history
-                var stayOnHistory = _historySettings.getStay();
+                //var stayOnHistory = _historySettings.getStay();
+                var stayOnHistory = GetSayOnButton();
                 var environmentUseStay = _useStay == "Y";
                 if(stayOnHistory && environmentUseStay)
                 {
@@ -2601,8 +2755,8 @@ namespace A60Insurance.Controllers
 
                 // focus not used in this case
                 // clear it only used with immediate return (stay) to history.
-                TempData["focusedClaimId"] = "";
-                TempData.Keep();
+                //TempData["focusedClaimId"] = "";
+                //TempData.Keep();
 
                 return RedirectToAction("Menu");
             }
@@ -2617,10 +2771,13 @@ namespace A60Insurance.Controllers
              
             var name = settingsData.Name;
             var state = settingsData.State == "on";
+            
             switch(name)
             {
-                case "stay":  _historySettings.setStay(state); break;
-                case "focus": _historySettings.setFocus(state); break;
+                //case "stay":  _historySettings.setStay(state); break;
+                case "stay": SetStayOnButton(state); break;
+                //case "focus": _historySettings.setFocus(state); break;
+                case "focus": SetFocusOnButton(state); break;
                 default: break;
             }
 

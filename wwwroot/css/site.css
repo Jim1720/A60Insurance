@@ -170,13 +170,13 @@ b1:hover {
 }
 
 .g2pay {
-    color: yellow;
+    color: red;
     border-color: white;
     margin-left: 20px;
 }
 
 .g3adjust {
-    color: red;
+    color: yellow;
     border-color: white;
     margin-left: 20px;
 }
@@ -232,7 +232,7 @@ b1:hover {
 
 
 g5new {
-    color: burlywood;
+    color: aqua;
     border-color: white;
     margin-left: 20px;
 }

@@ -2705,7 +2705,13 @@ namespace A60Insurance.Controllers
                 if (!good)
                 {
                     // just return to screen - edit was in java script.
-                    return RedirectToAction("History"); // reload model.
+                    //return RedirectToAction("History"); // reload model.
+
+                    SetFocusedClaimIdNumber(payClaimId);
+                    // will jump to top and scroll to current claim.
+                    return RedirectToAction("history");
+
+
                 }
                 string standardMessage = "Claim " + payClaimId + " paid " + paymentAmount + ".";
                 Task<HttpResponseMessage> m = PayClaim(payClaimId, payment.ToString());

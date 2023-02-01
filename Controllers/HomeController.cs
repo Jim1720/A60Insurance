@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using A60Insurance.StyleFeature;
 using A60Insurance.Helper;
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions; 
 
 // Release 2 - 
 // jsoncustomer - have update read this based on past cust id. to save tempdata space.
@@ -31,10 +32,10 @@ namespace A60Insurance.Controllers
 
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger; 
+        private readonly ILogger<HomeController> _logger;
         private readonly System.Net.Http.IHttpClientFactory _factory;
         // pull this in from env or something?
-        private  string _send;
+        private string _send;
         //TODO: overposting, https and anti-forgeries 
         //TODO: authentication authorization 
         private string _admId;
@@ -54,17 +55,17 @@ namespace A60Insurance.Controllers
 
         private readonly IScreenStyleManager _screenStyleManager;
         private readonly IScreenStyleList _screenStyleList;
-        private readonly IScreenStyleFactory _screenStyleFactory; 
- 
+        private readonly IScreenStyleFactory _screenStyleFactory;
+
         public HomeController(System.Net.Http.IHttpClientFactory factory,
                               ILogger<HomeController> logger,
                               ITagHelperComponentManager tagHelperComponentManager,
                               IConfiguration configuration,
                               IScreenStyleManager screenStyleManager,
                               IScreenStyleList screenStyleList,
-                              IScreenStyleFactory screenStyleFactory 
+                              IScreenStyleFactory screenStyleFactory
                               )
-        { 
+        {
             _logger = logger;
             _factory = factory;
             _configuration = configuration;
@@ -81,7 +82,7 @@ namespace A60Insurance.Controllers
             bool _useStylesSetting = _useStyles.ToUpper() == "Y";
             screenStyleManager.InsertStyleActiveSetting(_useStylesSetting);
             _logger.LogInformation("** environment loaded *");
-                 
+
             _tagHelperComponentManager = tagHelperComponentManager;
             _logger.LogInformation("** Home Controller takes off!");
             //_logger.LogInformation("using url prefix for API calls: " + _send);  
@@ -90,20 +91,20 @@ namespace A60Insurance.Controllers
             _screenStyleManager = screenStyleManager;
             _screenStyleList = screenStyleList;
             _screenStyleFactory = screenStyleFactory;
-             
+
 
             _useStay = getVar("UseStay");
             _useFocus = getVar("UseFocus");
             _useNav = getVar("UseNav");
             _useActions = getVar("UseActions");
 
-           
+
         }
 
         protected string getVar(string key)
         {
             var value = _configuration.GetValue<string>(key, "");
-            if(value == null)
+            if (value == null)
             {
                 var msg = "HomeController: no environment data for " + key;
                 _ = new InvalidOperationException(msg);
@@ -121,7 +122,7 @@ namespace A60Insurance.Controllers
         {
             _logger.LogInformation("*** showing index. ****");
 
-            ViewData["browser"] = Request.Headers["User-Agent"].ToString(); 
+            ViewData["browser"] = Request.Headers["User-Agent"].ToString();
 
             return View();
         }
@@ -129,38 +130,38 @@ namespace A60Insurance.Controllers
         public IActionResult Classic()
         {
             return View();
-        } 
+        }
 
         public IActionResult Menu()
         {
 
-            var custId = TempData["CustomerId"]; 
+            var custId = TempData["CustomerId"];
             var msg = TempData["MenuMessage"];
             var token = TempData["Token"];
 
             TempData["Token"] = token;
             TempData["CustomerId"] = custId;
-            TempData["CustomerSignedIn"] = "yes"; 
+            TempData["CustomerSignedIn"] = "yes";
             TempData["MenuMessage"] = "";
             TempData.Keep();
 
-            if(msg != null && msg.ToString() != "")
-            { 
+            if (msg != null && msg.ToString() != "")
+            {
 
                 ViewData["MenuMessage"] = msg;
-            }  
+            }
 
             return View();
         }
 
         async public Task<IActionResult> Plan()
         {
-             // Loads Plan entries 
+            // Loads Plan entries 
 
             _tagHelperComponentManager.Components.Add(
                new PlanScreenBodyTagHelper());
 
-            var plans =  (Plans) await ReadPlanListInformation();
+            var plans = (Plans)await ReadPlanListInformation();
 
             // 1. before we go replace CustomerId in temp data so it is 
             //    available on next method.
@@ -170,8 +171,8 @@ namespace A60Insurance.Controllers
             TempData.Keep();
 
             return View(plans);
-          
-        } 
+
+        }
 
         async protected Task<Plans> ReadPlanListInformation()
         {
@@ -193,7 +194,7 @@ namespace A60Insurance.Controllers
             {
                 var m1 = re.InnerException.Message.ToString();
                 ViewData["Message"] = m1;
-                _logger.LogInformation("req exception" + m1); 
+                _logger.LogInformation("req exception" + m1);
             }
             catch (System.Exception ex)
             {
@@ -211,12 +212,12 @@ namespace A60Insurance.Controllers
                 View("Error");
             }
 
-            var input = await response.Content.ReadAsStringAsync(); 
+            var input = await response.Content.ReadAsStringAsync();
             List<PlanEntry> planEntryList = JsonConvert.DeserializeObject<List<PlanEntry>>(input);
 
-            Plans plans = new Plans(planEntryList); 
-           
-            return plans; 
+            Plans plans = new Plans(planEntryList);
+
+            return plans;
 
         }
 
@@ -238,7 +239,7 @@ namespace A60Insurance.Controllers
             {
                 TempData["error"] = "Plan 01 - misadveture - id not set in claim setup.";
                 return RedirectToAction("Error");
-            } 
+            }
             var custId = tCustId.ToString().Trim();
 
             // workaround
@@ -279,7 +280,7 @@ namespace A60Insurance.Controllers
                 View("Error");
             }
 
-            System.Net.HttpStatusCode statusCode = m.StatusCode;  
+            System.Net.HttpStatusCode statusCode = m.StatusCode;
             Boolean goodResult = (statusCode == HttpStatusCode.OK ||
                 statusCode == HttpStatusCode.NoContent); // TODO: check this out
             _logger.LogInformation("status code: " + statusCode);
@@ -296,7 +297,7 @@ namespace A60Insurance.Controllers
             return RedirectToAction("Menu");
         }
 
-        
+
 
         private async Task<HttpResponseMessage> UpdateCustomerPlan(PlanUpdateParameters pup)
         {
@@ -308,13 +309,13 @@ namespace A60Insurance.Controllers
                 "application/json");
 
             var request = new HttpRequestMessage()
-             {
-                  RequestUri = new Uri(uri),
-                  Content = content,
-                  Method = HttpMethod.Put 
-              };
+            {
+                RequestUri = new Uri(uri),
+                Content = content,
+                Method = HttpMethod.Put
+            };
 
-            var token = TempData.Peek("Token").ToString(); 
+            var token = TempData.Peek("Token").ToString();
             request.Headers.Add("A65TOKEN", token);
 
             HttpResponseMessage response = null;
@@ -334,7 +335,7 @@ namespace A60Insurance.Controllers
                 _logger.LogInformation("caught:" + ex.Message.ToString());
             }
             _logger.LogInformation("update plan  call completed ok.");
-            return response; 
+            return response;
 
         }
 
@@ -344,7 +345,7 @@ namespace A60Insurance.Controllers
         public IActionResult Info()
         {
             return View();
-        } 
+        }
 
         public IActionResult About()
         {
@@ -367,20 +368,20 @@ namespace A60Insurance.Controllers
         [HttpPost]
         public async Task<ActionResult<Customer>> Register(Customer Customer)
         {
-            _logger.LogInformation("** register being processed..."); 
+            _logger.LogInformation("** register being processed...");
 
             var custId = Customer.CustId as string;
-            var pass   = Customer.CustPassword as string;
-            var confirm = Customer.ConfirmPassword as string; 
-          
+            var pass = Customer.CustPassword as string;
+            var confirm = Customer.ConfirmPassword as string;
+
             // basic edits
             ViewData["Message"] = "";
 
             // edit password  
 
             var saved = TempData.Peek("existingPassword") as string;
-            var savedPassword =  !(saved == null || saved.Trim() == "");
-            var noPasswordEntered = pass == null || pass.Trim() == ""; 
+            var savedPassword = !(saved == null || saved.Trim() == "");
+            var noPasswordEntered = pass == null || pass.Trim() == "";
 
             if (savedPassword && noPasswordEntered)
             {
@@ -424,7 +425,16 @@ namespace A60Insurance.Controllers
             var goodEmail = true;
 
             var email = Customer.CustEmail;
-            if (email != null && _authEmail.IndexOf(email) > -1)
+
+            var standardEmailPattern = @"^[0-9a-zA-Z]+@[0-9a-zA-Z]+\.[0-9a-zA-Z]+$";
+            Regex ex = new Regex(standardEmailPattern,
+                           System.Text.RegularExpressions.RegexOptions.Compiled |
+                           System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            MatchCollection matches = ex.Matches(email);
+
+            //if (email != null && _authEmail.IndexOf(email) > -1)
+            if (matches.Count > 0)
             {
                 // good email
             }
@@ -1162,6 +1172,26 @@ namespace A60Insurance.Controllers
                 Cust.CustBirthDate = dateParm.Formatted;
             }
 
+
+            var email = Cust.CustEmail;
+            var standardEmailPattern = @"^[0-9a-zA-Z]+@[0-9a-zA-Z]+\.[0-9a-zA-Z]+$";
+            Regex ex = new Regex(standardEmailPattern,
+                           System.Text.RegularExpressions.RegexOptions.Compiled |
+                           System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            MatchCollection matches = ex.Matches(email);
+
+            //if (email != null && _authEmail.IndexOf(email) > -1)
+            if (matches.Count > 0)
+            {
+                // good email
+            }
+            else
+            {
+                ViewData["Message"] = "Invalid Email";
+                TempData.Keep();
+                return View(Cust);
+            }
 
             // Edits - edit screen...
             if (!this.ModelState.IsValid)

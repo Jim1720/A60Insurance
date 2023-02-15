@@ -3,27 +3,41 @@
     ViewData["Title"] = "Main Menu";
 }
 <!-- copied from a11 -->
-<div class="container">
+
+<style>
+
+    .title {
+        margin-left: 440px;
+        font-family: Arial;
+        color: navajowhite;
+    }
 
 
-    <div style='margin-left: 320px'>
-        <div class="row justify-content-left">
-            <font family="arial" font-size="60" style="color:burlywood">
-                <h1 display-1> Main Insurance Menu</h1>
-            </font>
-        </div>
-    </div>
+    .b1w {
+        color: white;
+        margin-left: 50px;
+        margin-right: 20px;
+        padding-left: 20px;
+        padding-right: 20px;
+        border-radius: 10px;
+    }
 
-    <div class="row-md-6">
+    .r1 { border-radius: 10px; }
 
-        <img alt="Second slide" src="~/pics/rock.jpg" class="r1 img-fluid" style="margin: 10px">
+</style>
 
-    </div>
+<div class="container"> 
 
+    <h3 class="title"> Main Insurance Menu</h3> <br />
 
-    <br />
+    <div class="row justify-content-center">
 
-    <div class="row" style="margin-left: 100px;">
+        <img alt="rock" src="~/pics/rock.jpg" class="r1" 
+             width="380px" height="450px"/>  
+
+    </div> <br />
+
+    <div style="display:inline">
 
         <a type="button" class="b1w btn btn-primary" asp-controller="Home" asp-action="Update">Update Info</a>
         <a type="button" class="b1w btn btn-primary" asp-controller="Home" asp-action="Claim">File Claim</a>
@@ -34,14 +48,12 @@
 
     </div>
 
-
-    <div class="row">
-         
-
-            <p style="margin-left: 320px; margin-top: 15px; color:burlywood;">@ViewData["MenuMessage"]</p>
-
-         
-
+    <div class="form-group row" style="margin-top: 10px; margin-left:350px;">
+        <span style="color:navajowhite; font-size: x-large">
+            @ViewData["MenuMessage"]
+        </span>
     </div>
+
+     
 
 </div>

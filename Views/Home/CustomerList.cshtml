@@ -30,8 +30,9 @@
     }
 </style>
 
-@using (Html.BeginForm("CustomerList", "Home", FormMethod.Post))
-{
+
+
+<form asp-action="CustomerList"> 
 
     <h2>Customer List</h2>
 
@@ -100,7 +101,7 @@
 
     @Html.ActionLink("Return", "AdminAction", "Home", null, new { @class = "btn btn-outline-primary" })
 
-}
+</form>
 
 
 

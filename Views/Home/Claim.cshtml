@@ -96,9 +96,13 @@
     } }
 
 
+<style>
 
-@using (Html.BeginForm("Claim", "Home", FormMethod.Post))
-{
+    .a1 { margin-top: 15px; } /* row spacing */
+
+</style>
+
+<form asp-action="Claim">  
 
 
 <div id="FormStyleClass" class="@externalClass">
@@ -119,130 +123,158 @@
             </div>
         </div>
 
-        <div class="col">
-
-
-         
-            <div class="row justify-content-center">
-                <h4 style="margin: 8px; color: @headerColor">Submit Claim</h4>
-            </div>
-
+        <div class="col"> 
+          
+            <h4 style="margin-left: 320px; margin-top:10px; margin-bottom: 20px; color: @headerColor">
+                       Submit Claim
+            </h4> 
             
-            <div class="row">
+            <div class="form-group row gx-1"> 
+                <!-- first phys referring -->
 
-                <div class="col">
-
-
+                <div class="col-3">
                     <label style="color:@labelColor;" asp-for="@Model.PatientFirst" class="st1 control-label">First Name:</label>
                     <input asp-for="@Model.PatientFirst" class="form-control" placeholder="First Name" type="text" />
-
+                </div>
+                 <div class="col-3">
                     <label style="color:@labelColor;" asp-for="@Model.PatientLast" class="st1 control-label">Last Name:</label>
                     <input asp-for="@Model.PatientLast" class="form-control" placeholder="Last Name" type="text" />
+                 </div>
 
+                 <div class="col-3">
+                        <label style="color:@labelColor" class="st1 control-label">Notes:</label><br />
+                        <input class="form-control" asp-for="@Model.ClaimDescription" placeholder="Description" type="text" /> 
+                 </div>
 
-                    <br /><label style="color:@labelColor;" class="st1 control-label">Diagnosis Codes:</label>
-                    <select class="form-control" asp-for="@Model.Diagnosis1" asp-items="@diagnoses"></select>
-                    <select class="form-control" asp-for="@Model.Diagnosis2" asp-items="@diagnoses"></select>
+            </div>
 
-                    <br /><label style="color:@labelColor" class="st1 control-label">Procedure Codes:</label>
-                    <select class="form-control" asp-for="@Model.Procedure1" asp-items="@procedures"></select>
-                    <select class="form-control" asp-for="@Model.Procedure2" asp-items="@procedures"></select>
+            <div class="a1 form-group row gx-1">  
 
+                    <div class="col-3">
+                       <label style="color:@labelColor;" class="st1 control-label">Diagnosis Codes:</label>
+                       <select class="form-control" asp-for="@Model.Diagnosis1" asp-items="@diagnoses"></select>
+                       <select class="form-control" asp-for="@Model.Diagnosis2" asp-items="@diagnoses"></select>
+                    </div>   
+                    <div class="col-3">
+                       <label style="color:@labelColor" class="st1 control-label">Procedure Codes:</label>
+                       <select class="form-control" asp-for="@Model.Procedure1" asp-items="@procedures"></select>
+                       <select class="form-control" asp-for="@Model.Procedure2" asp-items="@procedures"></select>
+                    </div>  
+                    <div class="col-3">
+                       <label style="color:@labelColor" class="st1 control-label">Date of Service:</label>
+                       <input class="form-control" asp-for="@Model.ScreenDateService=" text" />
+                    </div>
+            </div>
 
-                    <br />
+             <div class="a1 form-group row gx-1">
 
+                 <div class="col-3">
+                      <label style="color:@labelColor" class="st1 control-label">Physician:</label>
+                       <select class="form-control" asp-for="@Model.Physician" asp-items="@doctors"></select> 
                 </div>
-
-                <div class="col">
-
-                    <label style="color:@labelColor;margin-bottom: 10px" class="st1 control-label">Physician:</label>
-                    <select class="form-control" asp-for="@Model.Physician" asp-items="@doctors"></select>
-
-                    <label style="color:@labelColor;margin-bottom:10px" class="st1 control-label">Clinics:</label>
+                 <div class="col-3">
+                    <label style="color:@labelColor" class="st1 control-label">Clinics:</label>
                     <select class="form-control" asp-for="@Model.Clinic" asp-items="@clinics"></select>
+                 </div>
+                 <div class="col-3">
 
-                    <label style="color:@labelColor;margin-bottom:10px" class="st1 control-label">Date of Service:</label>
-                    <input class="form-control" asp-for="@Model.ScreenDateService=" text" />
+                        <!-- SERVICE DROP DOWNS --> 
 
-                    <label style="color:@labelColor;margin-bottom:10px" class="st1 control-label">Location Type:</label>
-                    <select class="form-control" asp-for="@Model.Location" asp-items="@locations"></select>
+                        <label id="m1" style="color:red;margin-bottom: 20px" class="st1 control-label">Medical Service:</label>
 
-                    <!-- SERVICE DROP DOWNS -->
-                    <br />
+                        <select id="m2" class="form-control" asp-for="@Model.Service" asp-items="@Model.MedicalServiceOptions" type="text"></select>
 
-                    <label id="m1" style="color:red;margin-bottom: 20px" class="st1 control-label">Medical Service:</label>
+                        <label id="d1" style="color:@labelColor;margin-bottom:20px" class="st1 control-label">Dental Service:</label>
 
-                    <select id="m2" class="form-control" asp-for="@Model.Service" asp-items="@Model.MedicalServiceOptions" type="text"></select>
+                        <select id="d2" class="form-control" asp-for="@Model.dService" asp-items="@Model.DentalServiceOptions" type="text"></select>
 
-                    <label id="d1" style="color:@labelColor;margin-bottom:20px" class="st1 control-label">Dental Service:</label>
+                        <label id="v1" style="color:gold;margin-bottom:20px" class="st1 control-label">Vision Service:</label>
 
-                    <select id="d2" class="form-control" asp-for="@Model.dService" asp-items="@Model.DentalServiceOptions" type="text"></select>
+                        <select id="v2" class="form-control" asp-for="@Model.vService" asp-items="@Model.VisionServiceOptons" type="text"></select>
 
-                    <label id="v1" style="color:gold;margin-bottom:20px" class="st1 control-label">Vision Service:</label>
+                        <label id="x1" style="color:lawngreen;margin-bottom:20px" class="st1 control-label">Drug Service:</label>
 
-                    <select id="v2" class="form-control" asp-for="@Model.vService" asp-items="@Model.VisionServiceOptons" type="text"></select>
+                        <select id="x2" class="form-control" asp-for="@Model.xService" asp-items="@Model.DrugServiceOptions" type="text"></select>
 
-                    <label id="x1" style="color:lawngreen;margin-bottom:20px" class="st1 control-label">Drug Service:</label>
+                 </div>
 
-                    <select id="x2" class="form-control" asp-for="@Model.xService" asp-items="@Model.DrugServiceOptions" type="text"></select>
+              </div>
 
-                </div>
+              
+            <div class="a1 form-group row gx-1"> 
+                <div class="col-3">
 
-                <div class="col">
-
-                    <label style="color:@labelColor" class="st1 control-label">Referring:</label><br />
-                    <input class="form-control" asp-for="@Model.Referral" placeholder="Referral" type="text" />
-
-                    <label style="color:@labelColor" class="st1 control-label">Payment Method:</label><br />
-                    <select class="form-control" asp-for="@Model.PaymentAction" asp-items="@methods"></select>
-
-                    <br />
-                    <label style="color:@labelColor" class="st1 control-label">Notes:</label><br />
-                    <input class="form-control" asp-for="@Model.ClaimDescription" placeholder="Description" type="text" />
-
-                    <!-- type fields -->
-
-                    <br />
-
-                    <label id="c1" style="color:red;" asp-for="@Model.ScreenDateConfine" class="st1 control-label">Confine Date:</label>
-                    <input id="c2" asp-for="@Model.ScreenDateConfine" class="form-control" placeholder="Confine" type="text" />
-
-                    <label id="r1" style="color:red;" asp-for="@Model.ScreenDateRelease class=" st1 control-label">Release Date:</label>
-                    <input id="r2" asp-for="@Model.ScreenDateRelease" class="form-control" placeholder="Release" type="text" />
-
-                    <label id="t1" style="color:@labelColor;" asp-for="@Model.ToothNumber" class="st1 control-label">Tooth Numnber:</label>
-                    <input id="t2" asp-for="@Model.ToothNumber" class="form-control" placeholder="Tooth" type="text" />
-
-                    <label id="e1" style="color:palegoldenrod;" asp-for="@Model.Eyeware" class="st1 control-label">Eyeware:</label>
-                    <input id="e2" asp-for="@Model.Eyeware" class="form-control" placeholder="Eyeware" type="text" />
-
-                    <label id="a1" style="color:limegreen;" asp-for="@Model.DrugName" class="st1 control-label">Drug Name:</label>
-                    <input id="a2" asp-for="@Model.DrugName" class="form-control" placeholder="Drug" type="text" />
-
-
+                        <label style="color:@labelColor" class="st1 control-label">Location Type:</label>
+                        <select class="form-control" asp-for="@Model.Location" asp-items="@locations"></select>
 
                 </div>
+                <div class="col-3">
+
+                        <label style="color:@labelColor" class="st1 control-label">Referring:</label><br />
+                        <input class="form-control" asp-for="@Model.Referral" placeholder="Referral" type="text" />
+
+                </div>
+                <div class="col-3">
 
 
+                        <label style="color:@labelColor" class="st1 control-label">Payment Method:</label><br />
+                        <select class="form-control" asp-for="@Model.PaymentAction" asp-items="@methods"></select>
 
+                </div> 
             </div>
 
 
-            <div class="row justify-content-center">
 
-                <button style="margin:5px;" type="submit" class="btn st1 b1  btn-primary">Submit Claim</button>
-                @Html.ActionLink("Return", "Menu", "Home", null, new { style = "margin:5px;", @class = "btn btn-primary" })
+            <div class="a1 form-group row gx-1">
+
+                    <div id="c0" class="col-3"> 
+                       <label id="c1" style="color:red;" asp-for="@Model.ScreenDateConfine" class="st1 control-label">Confine Date:</label>
+                       <input id="c2" asp-for="@Model.ScreenDateConfine" class="form-control" placeholder="Confine" type="text" />
+                    </div>
+
+                     <div id="r0" class="col-3"> 
+                       <label id="r1" style="color:red;" asp-for="@Model.ScreenDateRelease class=" st1 control-label">Release Date:</label>
+                       <input id="r2" asp-for="@Model.ScreenDateRelease" class="form-control" placeholder="Release" type="text" />
+                    </div>
+
+                     <div id="t0" class="col-3">
+                       <label id="t1" style="color:@labelColor;" asp-for="@Model.ToothNumber" class="st1 control-label">Tooth Numnber:</label>
+                       <input id="t2" asp-for="@Model.ToothNumber" class="form-control" placeholder="Tooth" type="text" />
+                    </div>
+
+                     <div id="e0" class="col-3">
+                       <label id="e1" style="color:palegoldenrod;" asp-for="@Model.Eyeware" class="st1 control-label">Eyeware:</label>
+                       <input id="e2" asp-for="@Model.Eyeware" class="form-control" placeholder="Eyeware" type="text" />
+                    </div>
+
+                     <div id="a0" class="col-3">
+                       <label id="a1" style="color:limegreen;" asp-for="@Model.DrugName" class="st1 control-label">Drug Name:</label>
+                       <input id="a2" asp-for="@Model.DrugName" class="form-control" placeholder="Drug" type="text" />
+                    </div>
 
             </div>
-             
 
-                <div style="margin: 10px; color:@messageColor">   
-                        @ViewData["Message"]   
-                </div>  
-        </div>
+                
+
+          </div> <!-- end of right panel , the screen form -->
 
 
-    </div> <!-- end of row -->
+    </div>  <!-- end of top section of screen buttons next .. --> 
+
+    <br />
+
+    <div style="display: inline; margin-left: 370px; margin-top: 80px;">
+
+        <button style="margin:5px;" type="submit" class="btn btn-primary">Submit Claim</button>
+        @Html.ActionLink("Return", "Menu", "Home", null, new { style = "margin-left:10px;", @class = "btn btn-primary" })
+
+    </div> 
+     
+
+    <div style="margin-left: 200px; margin-top: 40px; color:@messageColor">   
+            @ViewData["Message"]   
+    </div>  
+        
     <!-- color hidden fields for java script refernece -->
     <!-- see ColorSetup.htm for the java script. -->
 
@@ -275,3 +307,7 @@
     </div>
 
 </div> <!-- end form style class-->}
+
+</form>
+
+

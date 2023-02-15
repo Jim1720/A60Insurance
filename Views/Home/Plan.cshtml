@@ -9,19 +9,15 @@
 } 
 
 
-@using (Html.BeginForm("PlanUpdate", "Home", FormMethod.Post))
-{
+<form asp-action="PlanUpdate"> 
 
     <div class="container">
 
 
-        <div style='margin-left:120px'>
-            <div class="row justify-content-left">
-                <font family="arial" font-size="60" style="color:Highlight">
-                    <h1 display-1><i> Plan Selection</i></h1>
-                </font>
-            </div>
-        </div>
+
+        <h4 id="UpdateScreen" style="margin-left:450px; 
+            margin-bottom: 150px;
+            color:burlywood">Plan Selection</h4>
 
         
            @{   var plans = Model.GetList(); 
@@ -31,35 +27,31 @@
                    var planLiteral = plan.PlanLiteral.ToString().Trim();
 
                    var q = "'";
-                   var parm = @q + planName + q;
+                   var parm = @q + planName + q; 
 
 
-                     <div style="margin-top: 20px;" class="row justify-content-left">
-
-                               <div>
+                    <div style="display: flex; margin-top: 25px; ">                                                                  >
                                     
-                                   <button onclick="planSelect(@parm)" 
-                                           type="button"  
-                                           class="st1 b1 btn btn-primary">
+                        <button onclick="planSelect(@parm)" 
+                                type="button"  
+                                style="margin-left: 150px;"
+                                class="st1 b1 btn btn-primary">
 
-                                       @planName
+                            @planName
                                           
-                                   </button>
+                        </button>
 
-                               </div>
+                        <p style="color:white; font-size: larger; margin-left: 30px;">
 
-                               <div style="margin-left: 80px; color:burlywood; font-size: larger;"> 
+                           @planLiteral
+ 
+                         </p>
 
-                                   @planLiteral
+                    </div> 
+               }
 
-                               </div>
-
-                      </div>
-
-                   }
             }
 
-            
             <footer style='margin-left: 120px; margin-top: 240px;'>
                 <div style="color: burlywood">@message</div>
                 <br /><br />
@@ -73,7 +65,7 @@
 
     </div>
 
-    }
+    </form>
 
 
 

@@ -29,6 +29,35 @@ namespace A60Insurance.Models
 
     public partial class Customer
     {
+
+        public Customer()
+        {
+
+            CustId = string.Empty;
+            CustFirst = string.Empty;
+            CustLast = String.Empty;
+            CustMiddle = string.Empty;
+            CustPassword = string.Empty;
+            ConfirmPassword = string.Empty;
+            Encrypted = string.Empty;
+            CustEmail = string.Empty;
+            CustBirthDate = DateTime.Now;
+            CustGender = string.Empty;
+            CustPhone = string.Empty;
+            CustAddr1 = string.Empty;
+            CustAddr2 = string.Empty;
+            CustCity = string.Empty;
+            CustState= string.Empty;
+            CustZip= string.Empty;
+            CustPlan = string.Empty;
+            PromotionCode= string.Empty;
+            AppId= string.Empty;
+            ExtendColors = string.Empty;
+            ClaimCount = string.Empty;
+            ScreenBirthDate = string.Empty; 
+
+        }
+
      public int Id { get; set; }
 
      [Required,
@@ -59,12 +88,11 @@ namespace A60Insurance.Models
      RegularExpression("^[a-zA-Z.\\s]*$", ErrorMessage = "Last Name must contains letters and is required")]
     public string CustLast { get; set; }
 
-    [Required,
-       EmailAddress]
-    public string CustEmail { get; set; }
+    [Required]
+    public string  CustEmail { get; set; }
     // edit date routine edits this field. screen uses screenBirthDate below.
     // once edited put data here.
-    public DateTime? CustBirthDate { get; set; }
+    public DateTime CustBirthDate { get; set; }
 
     [Required,
         RegularExpression("^[mfMF]+$", ErrorMessage = "Gender m f")]

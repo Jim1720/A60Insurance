@@ -7,8 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using A60Insurance.Models;
 using System.Net.Http;
-using System.Net;
-using Newtonsoft.Json;
+using System.Net; 
 using Microsoft.AspNetCore.Mvc.Razor.TagHelpers;
 using Microsoft.Extensions.Configuration; 
 using Microsoft.AspNetCore.Http; 
@@ -16,7 +15,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using A60Insurance.StyleFeature;
 using A60Insurance.Helper;
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions; 
+using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Runtime.CompilerServices;
+using static System.Net.WebRequestMethods;
 
 // Release 2 - 
 // jsoncustomer - have update read this based on past cust id. to save tempdata space.
@@ -49,6 +51,8 @@ namespace A60Insurance.Controllers
         private string _useNav;
         private string _useActions;
 
+        private string _standardEmailPattern;
+
 
         private readonly ITagHelperComponentManager _tagHelperComponentManager;
         private readonly IConfiguration _configuration;
@@ -74,8 +78,9 @@ namespace A60Insurance.Controllers
 
             // Load Environment values:
             _send = getVar("ApiUrlPrefix");
-            _admId = getVar("A45AdmId");
-            _admPassword = getVar("A45AdmPassword");
+             
+            _admId = getVar("AdmId");
+            _admPassword = getVar("AdmPassword");
             _promotionCode = getVar("A45PromotionCode");
             _authEmail = getVar("A45EmailList");
             _useStyles = getVar("UseStyles");
@@ -90,14 +95,14 @@ namespace A60Insurance.Controllers
             /* style and color related objects */
             _screenStyleManager = screenStyleManager;
             _screenStyleList = screenStyleList;
-            _screenStyleFactory = screenStyleFactory;
-
+            _screenStyleFactory = screenStyleFactory; 
 
             _useStay = getVar("UseStay");
             _useFocus = getVar("UseFocus");
             _useNav = getVar("UseNav");
-            _useActions = getVar("UseActions");
+            _useActions = getVar("UseActions"); 
 
+            _standardEmailPattern = getVar("StandardEmailPattern"); 
 
         }
 
@@ -122,7 +127,13 @@ namespace A60Insurance.Controllers
         {
             _logger.LogInformation("*** showing index. ****");
 
-            ViewData["browser"] = Request.Headers["User-Agent"].ToString();
+            ViewData["browser"] = Request.Headers["User-Agent"].ToString(); 
+
+            DateTime timetoBuyTime = DateTime.Now;
+
+            string timeToBuy = timetoBuyTime.ToString("f");
+
+            ViewData["TimeToBuy"] = timeToBuy;
 
             return View();
         }
@@ -213,7 +224,11 @@ namespace A60Insurance.Controllers
             }
 
             var input = await response.Content.ReadAsStringAsync();
-            List<PlanEntry> planEntryList = JsonConvert.DeserializeObject<List<PlanEntry>>(input);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            List<PlanEntry> planEntryList = JsonSerializer.Deserialize<List<PlanEntry>>(input, options);
 
             Plans plans = new Plans(planEntryList);
 
@@ -303,7 +318,7 @@ namespace A60Insurance.Controllers
         {
             var uri = _send + "api/UpdateCustomerPlan/";
             var client = _factory.CreateClient("UpdateCustomerPlan");
-            string json = JsonConvert.SerializeObject(pup);
+            string json = JsonSerializer.Serialize(pup);
             var content = new StringContent(json,
                 System.Text.Encoding.UTF8,
                 "application/json");
@@ -426,8 +441,8 @@ namespace A60Insurance.Controllers
 
             var email = Customer.CustEmail;
 
-            var standardEmailPattern = @"^[0-9a-zA-Z]+@[0-9a-zA-Z]+\.[0-9a-zA-Z]+$";
-            Regex ex = new Regex(standardEmailPattern,
+            // var standardEmailPattern = @"^[0-9a-zA-Z]+@[0-9a-zA-Z]+\.[0-9a-zA-Z]+$";
+            Regex ex = new Regex(_standardEmailPattern,
                            System.Text.RegularExpressions.RegexOptions.Compiled |
                            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
@@ -583,7 +598,7 @@ namespace A60Insurance.Controllers
             TempData.Clear();
             TempData["Token"] = GetToken(m);
             TempData["CustomerId"] = Customer.CustId;
-            //string json = JsonConvert.SerializeObject(Customer);
+            //string json = JsonSerializer.Serialize(Customer);
             //TempData["jsonCustomer"] = json;
             TempData["existingPassword"] = Customer.CustPassword;
             //
@@ -640,7 +655,12 @@ namespace A60Insurance.Controllers
 
             var uri = _send + "api/Customer/";
             var client = _factory.CreateClient("Register");
-            string json = JsonConvert.SerializeObject(Customer);
+            var serializeOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
+            var json = JsonSerializer.Serialize(Customer, serializeOptions); 
             var content = new StringContent(json,
                 System.Text.Encoding.UTF8,
                 "application/json");
@@ -702,6 +722,8 @@ namespace A60Insurance.Controllers
         {
             _logger.LogInformation("** signin post being processed...");
 
+             
+
             if (!ModelState.IsValid)
             {
                 ViewData["Message"] = "invalid id or password.";
@@ -734,7 +756,11 @@ namespace A60Insurance.Controllers
             HttpContent content = m.Content;
             HttpStatusCode statusCode = m.StatusCode;
             string json = await content.ReadAsStringAsync();
-            Customer customer = (Customer)JsonConvert.DeserializeObject<Customer>(json);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            Customer customer =  JsonSerializer.Deserialize<Customer>(json, options);
 
             Boolean goodResult = (statusCode == HttpStatusCode.OK);
             _logger.LogInformation("status code: " + statusCode);
@@ -774,6 +800,7 @@ namespace A60Insurance.Controllers
 
             return RedirectToAction("Menu");
         }
+         
 
         private string GetToken(HttpResponseMessage response)
         {
@@ -818,7 +845,7 @@ namespace A60Insurance.Controllers
         protected void StoreScreenStyleList()
         {
             var screenStyleList = _screenStyleList.getScreenStyleList();
-            var jsonData = JsonConvert.SerializeObject(screenStyleList);
+            var jsonData = JsonSerializer.Serialize(screenStyleList);
             TempData["screenStyleList"] = jsonData;
             TempData.Keep();
           
@@ -842,7 +869,7 @@ namespace A60Insurance.Controllers
 
             var tempDataValue = TempData["screenStyleList"].ToString();
             TempData.Keep();
-            List<ScreenStyleObject> screenStyleList = JsonConvert.DeserializeObject<List<ScreenStyleObject>>(tempDataValue);
+            List<ScreenStyleObject> screenStyleList = JsonSerializer.Deserialize<List<ScreenStyleObject>>(tempDataValue);
             _screenStyleList.setScreenStyleList(screenStyleList);
         }
 
@@ -972,6 +999,7 @@ namespace A60Insurance.Controllers
         [HttpGet]
         public async Task<IActionResult> Update()
         {
+              
 
             // verify proper signin
             var a = TempData["CustomerSignedIn"];
@@ -996,11 +1024,14 @@ namespace A60Insurance.Controllers
             _tagHelperComponentManager.Components.Add(
                      new GeneralStyleScreenBodyTagHelper());
 
-            var customerId = b.ToString();
+            //TODO: debug test fix
+            // custid = 1
+
+            var customerId = b.ToString(); 
 
             // note: Cust Model has no customer id. 
             //String json = TempData["jsonCustomer"] as string;
-            //Customer signinCust = (Customer)JsonConvert.DeserializeObject<Customer>(json);
+            //Customer signinCust = (Customer)JsonSerializer.Deserialize<Customer>(json);
 
 
             var (status, message, signinCust) =  await FetchCustomer(customerId);
@@ -1011,12 +1042,16 @@ namespace A60Insurance.Controllers
                 View("Error");
             } 
 
-            Cust cust = new Cust();
+             Cust cust = new Cust();
 
             // cust does not have id, password
             // used for screen validation only.
             // then, transimitted to customer to
             // update dateabase.
+
+           // not present on screen but needed for model/database
+           cust.CustPassword = signinCust.CustPassword.Trim();
+           cust.ConfirmPassword = signinCust.CustPassword.Trim();
               
            cust.CustFirst = signinCust.CustFirst.Trim();
            cust.CustLast = signinCust.CustLast.Trim();
@@ -1109,9 +1144,12 @@ namespace A60Insurance.Controllers
             if (goodResult == false)
             {
                 message += "status code:" + statusCode + " was returned. ";
-            } 
-
-            Customer customer = (Customer)JsonConvert.DeserializeObject<Customer>(json); 
+            }
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            Customer customer = JsonSerializer.Deserialize<Customer>(json, options); 
             return (goodResult, message, customer);
         }
 
@@ -1134,6 +1172,8 @@ namespace A60Insurance.Controllers
         public async Task<ActionResult<Cust>> Update(Cust Cust)
         { 
 
+            // 
+
             // screen built on cust model.
             // when valid data moved to customer with
             // id, rec id, password added to update data. 
@@ -1142,7 +1182,7 @@ namespace A60Insurance.Controllers
                 ViewData["Message"] = "temp data missing.";
                 return View(Cust);
             }
-
+             
             // setup color javascript 
             _tagHelperComponentManager.Components.Add(
                      new GeneralStyleScreenBodyTagHelper());
@@ -1174,8 +1214,8 @@ namespace A60Insurance.Controllers
 
 
             var email = Cust.CustEmail;
-            var standardEmailPattern = @"^[0-9a-zA-Z]+@[0-9a-zA-Z]+\.[0-9a-zA-Z]+$";
-            Regex ex = new Regex(standardEmailPattern,
+            //var standardEmailPattern = @"^[0-9a-zA-Z]+@[0-9a-zA-Z]+\.[0-9a-zA-Z]+$";
+            Regex ex = new Regex(_standardEmailPattern,
                            System.Text.RegularExpressions.RegexOptions.Compiled |
                            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
@@ -1193,37 +1233,74 @@ namespace A60Insurance.Controllers
                 return View(Cust);
             }
 
-            // Edits - edit screen...
-            if (!this.ModelState.IsValid)
-            {
-                TempData.Keep();
-                return View(Cust);
-            }
+           
 
-            // Password - handle blank password
-            String pass = Cust.CustPassword as string;
-            if (pass == null || pass.Trim() ==  "") // not keyed copy existing....
+            var pass = Cust.CustPassword as string;
+            var confirm = Cust.ConfirmPassword as string;
+
+            var saved = TempData.Peek("existingPassword") as string;
+            var savedPassword = !(saved == null || saved.Trim() == "");
+            var noPasswordEntered = pass == null || pass.Trim() == "";
+
+            // Password - handle blank password 
+            if (noPasswordEntered && savedPassword) // not keyed copy existing....
+            { 
+                Cust.CustPassword = saved; // use existing 
+                Cust.ConfirmPassword = saved;
+                pass = saved;
+            }
+            else if (noPasswordEntered && !savedPassword)
             {
-                // use existing one. 
-                 pass = TempData.Peek("existingPassword").ToString().Trim(); 
-             }
+                Cust.CustPassword = saved;
+                Cust.ConfirmPassword = saved;
+            }
             else
             {
                 // make sure new one matches confirmation 
-                if(Cust.ConfirmPassword == null)
+                if(confirm == null)
                 { 
                     ViewData["Message"] = "Please enter confirming password.";
                     TempData.Keep();
                     return View(Cust);
                 }
-                if(Cust.CustPassword != Cust.ConfirmPassword)
+                if(pass != confirm)
                 { 
                     // check confirm to match.
                     ViewData["Message"] = "Confirm password does not match.";
                     TempData.Keep();
                     return View(Cust);
                 }
+                // update with new password
+                Cust.CustPassword = pass;
+                Cust.ConfirmPassword = pass;
+                TempData["existingPassword"] = pass;
+                TempData.Keep();
             }
+            Cust.ConfirmPassword = Cust.ConfirmPassword.Trim();
+            Cust.CustPassword = Cust.CustPassword.Trim();
+
+
+            // Edits - edit screen...
+            if (!this.ModelState.IsValid)
+            {
+                ValidationContext v = new ValidationContext(Cust);
+                var result = new List<ValidationResult>();
+                bool isDataValid = Validator.TryValidateObject(Cust, v, result, true);
+                if (!isDataValid)
+                {
+                    var message = "";
+                    var prefix = " ";
+                    foreach (var e in result)
+                    {
+                        message += prefix;
+                        message += e.ErrorMessage.ToString();
+                    }
+                    ViewData["Message"] = message;
+                    TempData.Keep();
+                    return View(Cust);
+                } 
+            }
+
 
             // CustId -  not on screen, get it and put in customer object to use
             // since it is included in update data!!!
@@ -1240,7 +1317,9 @@ namespace A60Insurance.Controllers
 
             Customer customer = new Customer();
             customer.CustId = custId;
-            customer.CustPassword = pass; 
+            pass = pass.Trim();
+            customer.CustPassword = pass;
+            customer.ConfirmPassword = pass; // not saved but needed for validation
             customer.CustFirst = Cust.CustFirst;
             customer.CustLast = Cust.CustLast;
             customer.CustPhone = Cust.CustPhone;
@@ -1251,7 +1330,7 @@ namespace A60Insurance.Controllers
             customer.CustState = Cust.CustState;
             customer.CustZip = Cust.CustZip;
             customer.CustGender = Cust.CustGender;
-            customer.CustBirthDate = Cust.CustBirthDate;
+            customer.CustBirthDate = (DateTime) Cust.CustBirthDate;
             customer.CustMiddle = Cust.CustMiddle;
 
             // get fields saved in temp data.
@@ -1300,7 +1379,7 @@ namespace A60Insurance.Controllers
             ViewData["Message"] = "Successful update.";
 
             // good result - update internal copy.
-            //string json = JsonConvert.SerializeObject(customer);
+            //string json = JsonSerializer.Serialize(customer);
             //TempData["jsonCustomer"] = json;
             TempData["existingPassword"] = customer.CustPassword;
  
@@ -1318,7 +1397,11 @@ namespace A60Insurance.Controllers
 
             var uri = _send + "api/UpdateCustomer/";
             var client = _factory.CreateClient("update");
-            string json = JsonConvert.SerializeObject(customer);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            string json = JsonSerializer.Serialize<Customer>(customer, options);
             var content = new StringContent(json,   
                 System.Text.Encoding.UTF8,
                 "application/json");
@@ -1385,13 +1468,15 @@ namespace A60Insurance.Controllers
 
             _logger.LogInformation("claim load: cust id in temp data" + custId);
 
-            var adjustedClaimId = TempData["adjustedClaimId"] as string;
+            var adjustedClaimId = TempData["adjustedClaimId"] as string; 
+            var copiedClaimId = TempData["copiedClaimId"] as string;
             var paidClaimId = TempData["paidClaimId"] as string;
             // retain temp data values 
             TempData.Keep();
 
             var typeOfProcess = "new-claim";
-            if(adjustedClaimId != null) { typeOfProcess = "create-adjustment"; };
+            if(adjustedClaimId != null) { typeOfProcess = "create-adjustment"; }; 
+            if (copiedClaimId != null) { typeOfProcess = "copy-claim"; };
             if (paidClaimId != null) { typeOfProcess = "pay-claim"; }; 
              
 
@@ -1431,11 +1516,32 @@ namespace A60Insurance.Controllers
             } 
            
 
-            if (typeOfProcess == "create-adjustment")
+            if (typeOfProcess == "create-adjustment" ||  typeOfProcess == "copy-claim")
             {
-                _logger.LogInformation("claim adjust for claim: " + adjustedClaimId);
+                var oldClaimId = "";
 
-                HttpResponseMessage m = await GetClaim(adjustedClaimId);
+                HttpResponseMessage m = null;
+
+                if (typeOfProcess == "create-adjustment")
+                {
+                    _logger.LogInformation("claim adjust for claim: " + adjustedClaimId);
+
+                    m = await GetClaim(adjustedClaimId);
+
+                    oldClaimId = adjustedClaimId; // for message below
+
+                }
+
+                if (typeOfProcess == "copy-claim")
+                {
+                    _logger.LogInformation("claim copy for claim: " + copiedClaimId);
+
+                    m = await GetClaim(copiedClaimId);
+
+                    oldClaimId = copiedClaimId; // for message below
+
+                }
+
 
                 var msg = "";
 
@@ -1466,36 +1572,52 @@ namespace A60Insurance.Controllers
 
                 HttpContent content = m.Content; 
                 string json = await content.ReadAsStringAsync();
-                Claim adjustedClaim = (Claim)JsonConvert.DeserializeObject<Claim>(json);
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                Claim newClaim = (Claim)JsonSerializer.Deserialize<Claim>(json, options);
 
                 // format service date - ScreenDateService
 
-                adjustedClaim.ScreenDateService = FormatScreenDate(adjustedClaim.DateService.ToString());
+                newClaim.ScreenDateService = FormatScreenDate(newClaim.DateService.ToString());
 
                 // format confine release dates - ScreenDateConfine, ScreenDateRelease
 
-                if(adjustedClaim.ClaimType == "m")
+                if(newClaim.ClaimType == "m")
                 { 
-                    adjustedClaim.ScreenDateConfine = FormatScreenDate(adjustedClaim.DateConfine.ToString()); 
-                    adjustedClaim.ScreenDateRelease = FormatScreenDate(adjustedClaim.DateRelease.ToString());
+                    newClaim.ScreenDateConfine = FormatScreenDate(newClaim.DateConfine.ToString()); 
+                    newClaim.ScreenDateRelease = FormatScreenDate(newClaim.DateRelease.ToString());
 
 
                 }
 
-                adjustedClaim.Procedure1 = adjustedClaim.Procedure1.Trim();
-                adjustedClaim.Procedure2 = adjustedClaim.Procedure2.Trim();
-                adjustedClaim.Diagnosis1 = adjustedClaim.Diagnosis1.Trim();
-                adjustedClaim.Diagnosis2 = adjustedClaim.Diagnosis2.Trim();
-                adjustedClaim.Physician = adjustedClaim.Physician.Trim();
-                adjustedClaim.Clinic = adjustedClaim.Clinic.Trim();
-                adjustedClaim.Location = "";
-                adjustedClaim.PaymentAction = "";
-               // adjustedClaim.Location = adjustedClaim.Location.Trim();
-              //  adjustedClaim.PaymentAction = adjustedClaim.PaymentAction.Trim();
+                newClaim.ClaimDescription = newClaim.ClaimDescription.Trim();
+                newClaim.Procedure1 = newClaim.Procedure1.Trim();
+                newClaim.Procedure2 = newClaim.Procedure2.Trim();
+                newClaim.Diagnosis1 = newClaim.Diagnosis1.Trim();
+                newClaim.Diagnosis2 = newClaim.Diagnosis2.Trim();
+                newClaim.Physician = newClaim.Physician.Trim();
+                newClaim.Clinic = newClaim.Clinic.Trim();
+                newClaim.Referral = newClaim.Referral.Trim();
+                newClaim.Location = "";
+                newClaim.PaymentAction = "";
+
+                newClaim.DrugName = newClaim.DrugName.Trim();
+                newClaim.Eyeware = newClaim.Eyeware.Trim(); 
                
 
-                var newAdjustmentId = DateTime.Now.ToString("CL-MM-dd-yy-H:mm:ss");
-                TempData["newAdjustmentId"] = newAdjustmentId;
+                var newClaimId = DateTime.Now.ToString("CL-MM-dd-yy-H:mm:ss");
+                if (typeOfProcess == "create-adjustment")
+                {
+                    // triggers logic in add claim after submit
+                    TempData["newAdjustmentId"] = newClaimId;
+                }
+                if (typeOfProcess == "copy-claim")
+                {
+                    TempData["copiedClaimId"] = newClaimId;
+                }
+
 
                 // load services into Service list. 
 
@@ -1507,32 +1629,44 @@ namespace A60Insurance.Controllers
                 // drop down bound to claim.Service but typeServices provides
                 // selection list for this claim type.
 
-                List<ServiceEntry> typeServices = FilterByType(allServices, adjustedClaim.ClaimType);
+                List<ServiceEntry> typeServices = FilterByType(allServices, newClaim.ClaimType);
+
+                var Message = "";
 
                 /* fixed for style so frame does not extend down */
-                var adjMessage = $"Enter adjusting claim for {adjustedClaimId}. " +
-                                 $" The adjustement claim id will be {newAdjustmentId}.";
-                ViewData["message"] = adjMessage;
+                if (typeOfProcess == "create-adjustment")
+                {
+                       Message = $"Enter adjusting claim for {oldClaimId}. " +
+                                 $" The adjustement claim id will be {newClaimId}."; 
+                }
+
+                if (typeOfProcess == "copy-claim")
+                {
+                      Message = $"Claim {oldClaimId} copied here. " +
+                                 $" The new claim id will be {newClaimId}.";
+                }
+
+                ViewData["message"] = Message;
 
                 /* parking lot
                 ViewData["message"] = "Enter adjusting claim for ";
-                ViewData["message2"] = adjustedClaimId;
+                ViewData["message2"] = newClaimId;
                 ViewData["message3"] = "Adjustment claim id will be:";
                 ViewData["message4"] = newAdjustmentId;
                 */
 
                 // trim name
-                adjustedClaim.PatientFirst = adjustedClaim.PatientFirst.Trim();
-                adjustedClaim.PatientLast = adjustedClaim.PatientLast.Trim();
+                newClaim.PatientFirst = newClaim.PatientFirst.Trim();
+                newClaim.PatientLast = newClaim.PatientLast.Trim();
                 //TODO: determine date handling for dates. 
 
 
-                LoadDropDowns(allServices, adjustedClaim);
+                LoadDropDowns(allServices, newClaim);
 
                 // deserialize from TemPData if necessary.
                 FetchScreenStyleList();
 
-                return View(adjustedClaim);
+                return View(newClaim);
             }
 
             TempData["error"] = "Claim Screen: could not initiate adjustement...";
@@ -1673,7 +1807,11 @@ namespace A60Insurance.Controllers
              
 
             var input = await response.Content.ReadAsStringAsync();
-            List<ServiceEntry> serviceEntryList = JsonConvert.DeserializeObject<List<ServiceEntry>>(input);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            List<ServiceEntry> serviceEntryList = JsonSerializer.Deserialize<List<ServiceEntry>>(input, options);
 
             Services services = new Services(serviceEntryList);
 
@@ -1991,7 +2129,9 @@ namespace A60Insurance.Controllers
             claim.AdjustedClaimId = "";
             claim.Procedure3 = ""; // do not use - room on screen
 
-            string adjustedClaimId = TempData["adjustedClaimId"] as string; 
+            string adjustedClaimId = TempData["adjustedClaimId"] as string;
+            //
+            string copiedClaimId = TempData["copiedClaimId"] as string;
             // retain temp data values 
             TempData.Keep();
             // do any adjustment processing if needed.
@@ -2001,12 +2141,20 @@ namespace A60Insurance.Controllers
             // look at Get! It is there.
 
 
-            var adjustment = (adjustedClaimId != null);
+            var adjustment = (adjustedClaimId != null); 
+            var claimCopy = (copiedClaimId != null);
 
             // Timing: when both id's match - error out. 
             if (adjustedClaimId == claim.ClaimIdNumber)
             {
                 ViewData["Message"] = "Adjustment has same claim id as original claim.";
+                EditReloadDropdowns(claim);
+                return View(claim);
+            }
+            // Timing: when both id's match - error out. 
+            if (copiedClaimId == claim.ClaimIdNumber)
+            {
+                ViewData["Message"] = "Copy has same claim id as original claim.";
                 EditReloadDropdowns(claim);
                 return View(claim);
             }
@@ -2018,7 +2166,15 @@ namespace A60Insurance.Controllers
                 claim.AdjustedClaimId = adjustedClaimId;
                 claim.ClaimStatus = "Adjustment";
             }
-         
+            //
+            if (claimCopy)
+            {
+                claim.ClaimIdNumber = TempData["copiedClaimId"].ToString();
+                TempData.Keep(); 
+                claim.ClaimStatus = "Entered";
+                TempData["copiedClaimId"] = null;
+            }
+
             HttpResponseMessage m = await AddClaim(claim);
             if (m == null)
             {
@@ -2141,7 +2297,7 @@ namespace A60Insurance.Controllers
             var listNotEmpty = json != null; 
             if(listNotEmpty)
             {
-                list = JsonConvert.DeserializeObject<List<ActionObject>>(json);
+                list = JsonSerializer.Deserialize<List<ActionObject>>(json);
             }
 
             // list full - remove first entry
@@ -2156,7 +2312,7 @@ namespace A60Insurance.Controllers
             list.Add(newAction);  
 
             // replace list in tempData 
-            String jsonOutput = JsonConvert.SerializeObject(list);
+            String jsonOutput = JsonSerializer.Serialize(list);
 
             TempData["ActionList"] = jsonOutput; 
             TempData.Keep();
@@ -2179,7 +2335,7 @@ namespace A60Insurance.Controllers
                 return notFound;
             } 
              
-            list = JsonConvert.DeserializeObject<List<ActionObject>>(json);
+            list = JsonSerializer.Deserialize<List<ActionObject>>(json);
 
             var count = list.Count;
 
@@ -2320,7 +2476,7 @@ namespace A60Insurance.Controllers
             var client = _factory.CreateClient("addClaimCount");  
             
             // AddClaimCount always adds 1 
-            string json = JsonConvert.SerializeObject(custId);
+            string json = JsonSerializer.Serialize(custId);
             var content = new StringContent(json,
                 System.Text.Encoding.UTF8,
                 "application/json");
@@ -2380,7 +2536,7 @@ namespace A60Insurance.Controllers
             StampData stampData = new StampData(adjustedClaimId, adjustingClaimId, date,
                 appAdjusting);
 
-            string json = JsonConvert.SerializeObject(stampData);
+            string json = JsonSerializer.Serialize(stampData);
             var content = new StringContent(json,
                 System.Text.Encoding.UTF8,
                 "application/json");
@@ -2428,7 +2584,7 @@ namespace A60Insurance.Controllers
             // // POST: api/Claim 
             var uri = _send + "api/claim/";
             var client = _factory.CreateClient("claimAdd");
-            string json = JsonConvert.SerializeObject(claim);
+            string json = JsonSerializer.Serialize(claim);
             var content = new StringContent(json,
                 System.Text.Encoding.UTF8,
                 "application/json");
@@ -2608,8 +2764,12 @@ namespace A60Insurance.Controllers
                 return claimsHistory; // view name - error condition
             }
 
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
             string json = await content.ReadAsStringAsync();
-            var resultData = JsonConvert.DeserializeObject<List<Claim>>(json);
+            var resultData = JsonSerializer.Deserialize<List<Claim>>(json, options);
             foreach (var item in resultData)
             {
                 Claim c = (Claim)item;
@@ -2669,9 +2829,10 @@ namespace A60Insurance.Controllers
             return (payClaimClicked, sAmount, inClaimId);
         }
 
-        (Boolean isAdjustment, string ClaimIdNumber) ReadAdjustmentData()
+        (Boolean isAdjustment, Boolean isCopy, string ClaimIdNumber) ReadAdjustmentData()
         {
             var isAdjustment = false;
+            var isCopy = false;
             var claimId = "";
 
             Microsoft.Extensions.Primitives.StringValues inAction; 
@@ -2679,7 +2840,7 @@ namespace A60Insurance.Controllers
             var item = inAction.ToString(); 
             if (item.Length <= 6)
             {
-                return (false, "");
+                return (false, false , "");
             }
              
             var verb = item.Substring(0, 6);
@@ -2689,7 +2850,14 @@ namespace A60Insurance.Controllers
                 claimId = item.Substring(6);
             }
 
-            return (isAdjustment, claimId);
+            var verb4 = item.Substring(0, 4);
+            if (verb4 == "copy")
+            {
+                isCopy = true;
+                claimId = item.Substring(4);
+            }
+
+            return (isAdjustment, isCopy , claimId);
 
         }
 
@@ -2705,9 +2873,9 @@ namespace A60Insurance.Controllers
             (Boolean paymentUsed, string paymentAmount, string payClaimId) = ReadPaymentData();
 
             // 2. Examine adjustment fields. 
-            (Boolean isAdjustment, string AdjClaimId) = ReadAdjustmentData(); 
+            (Boolean isAdjustment, Boolean isCopy, string foundClaimId) = ReadAdjustmentData(); 
 
-            var validRequest = paymentUsed || isAdjustment;
+            var validRequest = paymentUsed || isAdjustment || isCopy;
             if (!validRequest)
             { 
                 ViewData["message"] = "could not process request..";
@@ -2721,7 +2889,13 @@ namespace A60Insurance.Controllers
             // claim already adjusted - same with pay button.
             if (isAdjustment)
             {
-                TempData["adjustedClaimId"] = AdjClaimId;
+                TempData["adjustedClaimId"] = foundClaimId;
+                TempData.Keep();
+                return RedirectToAction("Claim");
+            }
+            if (isCopy)
+            {
+                TempData["copiedClaimId"] = foundClaimId;
                 TempData.Keep();
                 return RedirectToAction("Claim");
             }
@@ -2832,7 +3006,11 @@ namespace A60Insurance.Controllers
             decimal _amount = decimal.Parse(Amount);
             PayData payData = new PayData(ClaimId, _amount, date);
 
-            string json = JsonConvert.SerializeObject(payData);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            string json = JsonSerializer.Serialize(payData, options);
             var content = new StringContent(json,
                 System.Text.Encoding.UTF8,
                 "application/json");
@@ -3027,7 +3205,7 @@ namespace A60Insurance.Controllers
             var goodResult = true;
             var uri = _send + "api/ChangePassword/";
             var client = _factory.CreateClient("ResetPassword");
-            string json = JsonConvert.SerializeObject(PasswordChanger);
+            string json = JsonSerializer.Serialize(PasswordChanger);
             var content = new StringContent(json,
                 System.Text.Encoding.UTF8,
                 "application/json");
@@ -3038,9 +3216,7 @@ namespace A60Insurance.Controllers
                 Content = content,
                 Method = HttpMethod.Put
             };
-
-            var token = TempData.Peek("Token").ToString();
-            request.Headers.Add("A65TOKEN", token);
+             
 
             //TODO: not: not add cors since in same project. 
             _logger.LogInformation("prepare reset password.");
@@ -3091,7 +3267,7 @@ namespace A60Insurance.Controllers
             var msg = "";
             var uri = _send + "api/ResetCustomer/";
             var client = _factory.CreateClient("ResetCustomerId");
-            string json = JsonConvert.SerializeObject(CustomerResetter);
+            string json = JsonSerializer.Serialize(CustomerResetter);
             var content = new StringContent(json,
                 System.Text.Encoding.UTF8,
                 "application/json");
@@ -3102,9 +3278,7 @@ namespace A60Insurance.Controllers
                 Content = content,
                 Method = HttpMethod.Put
             };
-
-            var token = TempData.Peek("Token").ToString();
-            request.Headers.Add("A65TOKEN", token);
+             
 
             //TODO: not: not add cors since in same project. 
             _logger.LogInformation("prepare reset customer.");
@@ -3228,7 +3402,11 @@ namespace A60Insurance.Controllers
 
             var content = response.Content;
             string json = await content.ReadAsStringAsync();
-            var resultData = JsonConvert.DeserializeObject<List<Customer>>(json);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            var resultData = JsonSerializer.Deserialize<List<Customer>>(json, options);
 
             CustomerList customerList = new CustomerList();
 

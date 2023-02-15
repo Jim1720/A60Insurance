@@ -4,12 +4,42 @@ using System.ComponentModel.DataAnnotations;
 
 namespace A60Insurance.Models 
 {
-    public partial class Cust
-    {  
+     
+     
 
-     [RegularExpression("^[a-zA-Z.\\s]*$", ErrorMessage = " password must only contains letters or numbers - required.")]
-    public string CustPassword { get; set; }
-         
+    public partial class Cust
+    {
+        public Cust()
+        { 
+             
+            CustFirst = string.Empty;
+            CustLast = string.Empty;
+            CustMiddle = string.Empty; 
+            Encrypted = string.Empty;
+            CustEmail = string.Empty;
+            CustBirthDate = DateTime.Now;
+            CustGender = string.Empty;
+            CustPhone = string.Empty;
+            CustAddr1 = string.Empty;
+            CustAddr2 = string.Empty;
+            CustCity = string.Empty;
+            CustState= string.Empty;
+            CustZip= string.Empty;
+            CustPlan = string.Empty;
+            PromotionCode= string.Empty;
+            AppId= string.Empty;
+            ExtendColors = string.Empty;
+            ClaimCount = string.Empty;
+            ScreenBirthDate = string.Empty; 
+
+
+        }
+
+        [Required,
+         RegularExpression("^[a-zA-Z0-9]+$", ErrorMessage = " Password must only contains letters or numbers and is required.")]
+
+        public string CustPassword { get; set; } 
+    public string ConfirmPassword { get; set; } 
 
     public string Encrypted { get; set; }
 
@@ -25,8 +55,7 @@ namespace A60Insurance.Models
      RegularExpression("^[a-zA-Z.\\s]*$", ErrorMessage = "Last Name must contains letters and is required")]
     public string CustLast { get; set; }
 
-    [Required, 
-     RegularExpression("^([a-z0-9A-Z])(@)([a-z0-9A-Z])(\\.)([a-z0-9A-Z])$", ErrorMessage = "Invalid Email Address")]
+    [Required]
         public string CustEmail { get; set; }
     // edit date routine edits this field. screen uses screenBirthDate below.
     // once edited put data here.
@@ -61,8 +90,7 @@ namespace A60Insurance.Models
 
     [NotMapped]
     public string ScreenBirthDate { get; set; }
-
-    [NotMapped]
-    public string ConfirmPassword { get; set; }
+         
+         
 }
 }

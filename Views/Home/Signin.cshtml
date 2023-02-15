@@ -1,81 +1,69 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+﻿  
+
+@*
+    ======================
+           Signin
+    =======================
 *@
 
 @model A60Insurance.Models.Signin
 @{
     ViewData["Title"] = "Signin";
-}
+} 
 
+<style>
 
+    .st1 { font-family:Arial; font-size:larger;}
 
-@using (Html.BeginForm("Signin", "Home", FormMethod.Post))
-{ 
+</style>
+ 
+<div class="container">
 
-    <div class="container">
+<form asp-action="SignIn">     
 
-        <h2 style="margin-left:340px; margin-top:40px; margin-bottom: 40px; color:burlywood">Customer Sign In</h2>
+                <h2 style="margin-left: 420px; margin-top:40px; margin-bottom: 40px; color:burlywood">Customer Sign In</h2>
 
-        <div style='margin-left: 320px'>
+                <div style='margin-left: 480px'>
 
-            <div class="row" form-control>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label style="color:dodgerblue;" asp-for="@Model.CustomerId" class="st1 control-label">Customer Id:</label>
-                        <div class="input-group">
-                            <span class="input-group-addon" id="basic-addon1">$</span>
-                            <input asp-for="@Model.CustomerId" class="st1 form-control" placeholder="Customer Id" type="text" />
+                    <div class="row" justify-content-center">
+                        <div class="col-3"> 
+                             <label style="color:dodgerblue;" asp-for="@Model.CustomerId" class="st1 control-label">Customer Id:</label> 
+                             <input asp-for="@Model.CustomerId" class="st1 form-control" placeholder="Customer Id" type="text" />
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label style="color:dodgerblue;" asp-for="@Model.Password" class="st1 control-label">Password:</label>
-                        <div class="input-group">
-                            <span class="input-group-addon" id="basic-addon1">$</span>
-                            <input asp-for="@Model.Password" class="st1 form-control" placeholder="Password" type="password" />
-                        </div>
-                    </div>
-
-                </div>
+                     </div>
+                     <br />
+                     <div class="row" justify-content-center">
+                          <div class="col-3">
+                              <label style="color:dodgerblue;" asp-for="@Model.Password" class="st1 control-label">Password:</label>  
+                              <input asp-for="@Model.Password" class="st1 form-control" placeholder="Password" type="password" /> 
+                         </div> 
+                    </div> 
+                    
             </div>
 
+        <br />
+        <br />
 
-            <br />
-            <div class="row" form-control>
-
-                <div class="col-md-2"></div>
-                <div class="col-md-6" style="color:white">
-                    <button type="submit" class="b1 btn btn-primary">Sign In</button>
-                </div>
-
-            </div>
-
-
-            <br />
-            <div class="row" form-control>
-
-
-                <div class="col-md-2"></div>
-                <div class="col-md-6" style="color:white">
-
-
-                    @Html.ValidationSummary()
-
-                    <p style="color:burlywood">@ViewData["Message"]</p>
-
-
-                </div>
-
-            </div>
-
-
-
+        <div style='display: inline; margin-left: 480px;'>
+            <button type="submit" class="b1 btn btn-primary">Sign In</button>
         </div>
 
-    </div>
+        <br />
+        <br />
+        <br />
 
+        <div class="row">
+            <div style="margin-left:480px">
+                <div style="color:burlywood; font-size: larger;">
+                    @Html.ValidationSummary()
+                    <p style="color:burlywood">@ViewData["Message"]</p>
+                </div>
+            </div>
+        </div>
 
-}
+    </form>
 
+  </div>
 
 
 

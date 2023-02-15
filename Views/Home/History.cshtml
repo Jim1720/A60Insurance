@@ -19,72 +19,74 @@
 <style>
 
     th {
-        font-size: medium;
-        color: springgreen;
+    font-size: medium;
+    color: springgreen;
     }
 
     td {
-        font-size: medium;
-        color: white;
+    font-size: medium;
+    color: white;
     }
 
     h2 {
-        color: dodgerblue;
+    color: dodgerblue;
     }
 
     .goldenrod {
-        color: goldenrod;
+    color: goldenrod;
     }
 
     .lawngreen {
-        color: lawngreen;
+    color: lawngreen;
     }
 
     .yellow {
-        color: yellow;
+    color: yellow;
     }
 
     .white {
-        color: white;
+    color: white;
     }
 
     .darkorange {
-        color: darkorange
+    color: darkorange
     }
 
     .gold {
-        color: gold
+    color: gold
     }
 
     .aqua {
-        color: aqua
+    color: aqua
     }
 
     .white {
-        color: white
+    color: white
     }
 
     .dodgerblue {
-        color: dodgerblue
+    color: dodgerblue
     }
 
     .burleywood {
-        color: burlywood
+    color: burlywood
     }
 </style>
 
 
-@using (Html.BeginForm("ReadClaimHistory", "Home", FormMethod.Post))
-{
 
-    var focusedClaimId = "notSet";
+<form asp-action="ReadClaimHistory"> 
 
 
-    // focused claim id
-    focusedClaimId = ViewData["FocusedClaimId"] as string;
+    @{
+        var focusedClaimId = "notSet"; 
 
+        // focused claim id
+        focusedClaimId = ViewData["FocusedClaimId"] as string; 
 
-    ViewBag.Title = "Show Claim History";
+        ViewBag.Title = "Show Claim History";
+
+     }
 
     <input style="visibility:hidden" type="text" id="hiddenAmount" name="hiddenAmount" value="" />
 
@@ -92,12 +94,13 @@
 
     <input style="visibility:hidden" type="text" id="hiddenClaimId" name="hiddenClaimId" value="" />
 
-    <input style="visibility:hidden" type="text" id="focusedClaimId" name="focusedClaimId" value=@focusedClaimId />
+    <input style="visibility:hidden" type="text" id="focusedClaimId" name="focusedClaimId" 
+           value=@focusedClaimId />
 
     <h2>Claim History</h2>
 
 
-
+    @{
     var count = 0;
     var loop = 0;
     var anyOfAbove = false;
@@ -194,25 +197,25 @@
         /* class colors are colors */
 
         <div class="row" style="color:dodgerblue">
-            <div class="col-md-3 white">  Claim  Identification:</div>
-            <div class="col-md-3 white">  Status: </div>
-            <div class="col-md-3 white">  Type: </div>
-            <div class="col-md-3 white">  Sequence:</div>
+            <div class="col-3 white">  Claim  Identification:</div>
+            <div class="col-3 white">  Status: </div>
+            <div class="col-3 white">  Type: </div>
+            <div class="col-3 white">  Sequence:</div>
         </div>
 
         <div class="row">
-            <div class="col-md-3 dodgerblue">  @c.ClaimIdNumber</div>
-            <div class="col-md-3 dodgerblue"
+            <div class="col-3 dodgerblue">  @c.ClaimIdNumber</div>
+            <div class="col-3 dodgerblue"
                  style="@statColor">          @c.ClaimStatus </div>
-                <div class="col-md-3 dodgerblue">  @type </div>
-                <div class="col-md-3 dodgerblue"> @count  </div>
+                <div class="col-3 dodgerblue">  @type </div>
+                <div class="col-3 dodgerblue"> @count  </div>
             </div>
 
             <div class="row">
-                <div class="col-md-3 white">  Patient:</div>
-                <div class="col-md-3 white">  Service Date: </div>
-                <div class="col-md-3 white">  Clinic: </div>
-                <div class="col-md-3 white">  Doctor: </div>
+                <div class="col-3 white">  Patient:</div>
+                <div class="col-3 white">  Service Date: </div>
+                <div class="col-3 white">  Clinic: </div>
+                <div class="col-3 white">  Doctor: </div>
             </div>
 
             var name = c.PatientFirst + " " + c.PatientLast;
@@ -273,10 +276,10 @@
 
             <div class="row">
 
-                <div class="col-md-3 burleywood"> @name</div>
-                <div class="col-md-3 dodgerblue">  @dos </div>
-                <div class="col-md-3 goldenrod">        @c.Clinic </div>
-                <div class="col-md-3 goldenrod">        @c.Physician </div>
+                <div class="col-3 burleywood"> @name</div>
+                <div class="col-3 dodgerblue">  @dos </div>
+                <div class="col-3 goldenrod">        @c.Clinic </div>
+                <div class="col-3 goldenrod">        @c.Physician </div>
 
             </div>
 
@@ -286,10 +289,10 @@
             if (c.Diagnosis2 != "" && c.Diagnosis2 != "none") { diag += c.Diagnosis2; }
 
             <div class="row">
-                <div class="col-md-3 white">  Procedure:</div>
-                <div class="col-md-3 white">  Diagnosis: </div>
-                <div class="col-md-3 white">        Service: </div>
-                <div class="col-md-3 white">  Note: </div>
+                <div class="col-3 white">  Procedure:</div>
+                <div class="col-3 white">  Diagnosis: </div>
+                <div class="col-3 white">        Service: </div>
+                <div class="col-3 white">  Note: </div>
             </div>
 
             @if (c.ClaimDescription.Trim() == "")
@@ -298,39 +301,39 @@
             }
 
             <div class="row">
-                <div class="col-md-3 goldenrod">  @procedures</div>
-                <div class="col-md-3 goldenrod">  @diag </div>
-                <div class="col-md-3 dodgerblue">  @service</div>
-                <div class="col-md-3 goldenrod">  @c.ClaimDescription </div>
+                <div class="col-3 goldenrod">  @procedures</div>
+                <div class="col-3 goldenrod">  @diag </div>
+                <div class="col-3 dodgerblue">  @service</div>
+                <div class="col-3 goldenrod">  @c.ClaimDescription </div>
             </div>
 
             <div class="row">
 
 
-                <div class="col-md-3 white">  Customer Plan: </div>
-                <div class="col-md-3 white">  Location: </div>
-                <div class="col-md-3 white">  Referral: </div>
+                <div class="col-3 white">  Customer Plan: </div>
+                <div class="col-3 white">  Location: </div>
+                <div class="col-3 white">  Referral: </div>
             </div>
 
             <div class="row">
 
-                <div class="col-md-3 dodgerblue">  @plan </div>
-                <div class="col-md-3 goldenrod">  @c.Location </div>
-                <div class="col-md-3 goldenrod">  @c.Referral </div>
+                <div class="col-3 dodgerblue">  @plan </div>
+                <div class="col-3 goldenrod">  @c.Location </div>
+                <div class="col-3 goldenrod">  @c.Referral </div>
 
             </div>
 
             <div class="row">
-                <div class="col-md-3 white">  Submitted Charge:</div>
-                <div class="col-md-3 white">  Plan Covered: </div>
-                <div class="col-md-3 white">  Balance Owed: </div>
+                <div class="col-3 white">  Submitted Charge:</div>
+                <div class="col-3 white">  Plan Covered: </div>
+                <div class="col-3 white">  Balance Owed: </div>
 
             </div>
 
             <div class="row">
-                <div class="col-md-3 goldenrod">  $@c.TotalCharge</div>
-                <div class="col-md-3 goldenrod">  $@c.CoveredAmount </div>
-                <div class="col-md-3 goldenrod">  $@c.BalanceOwed </div>
+                <div class="col-3 goldenrod">  $@c.TotalCharge</div>
+                <div class="col-3 goldenrod">  $@c.CoveredAmount </div>
+                <div class="col-3 goldenrod">  $@c.BalanceOwed </div>
 
             </div>
 
@@ -339,15 +342,15 @@
             {
 
                 <div class="row">
-                    <div class="col-md-3 white">  Confinement Begins:</div>
-                    <div class="col-md-3 white">  Plan Covered: </div>
-                    <div class="col-md-3 white">  Balance Owed: </div>
+                    <div class="col-3 white">  Confinement Begins:</div>
+                    <div class="col-3 white">  Plan Covered: </div>
+                    <div class="col-3 white">  Balance Owed: </div>
                 </div>
 
                 <div class="row">
-                    <div class="col-md-3 dodgerblue">  @confine</div>
-                    <div class="col-md-3 dodgerblue">  @release </div>
-                    <div class="col-md-3 dodgerblue">  @stay </div>
+                    <div class="col-3 dodgerblue">  @confine</div>
+                    <div class="col-3 dodgerblue">  @release </div>
+                    <div class="col-3 dodgerblue">  @stay </div>
                 </div>
 
             }
@@ -355,33 +358,33 @@
             if (c.ClaimType == "d")
             {
                 <div class="row">
-                    <div class="col-md-3 white">  Tooth Number:</div>
+                    <div class="col-3 white">  Tooth Number:</div>
                 </div>
 
                 <div class="row">
-                    <div class="col-md-3 goldenrod">  @c.ToothNumber</div>
+                    <div class="col-3 goldenrod">  @c.ToothNumber</div>
                 </div>
             }
 
             if (c.ClaimType == "v")
             {
                 <div class="row">
-                    <div class="col-md-3 white">  Eye Equipment:</div>
+                    <div class="col-3 white">  Eye Equipment:</div>
                 </div>
 
                 <div class="row">
-                    <div class="col-md-3 goldenrod">  @c.Eyeware</div>
+                    <div class="col-3 goldenrod">  @c.Eyeware</div>
                 </div>
             }
 
             if (c.ClaimType == "x")
             {
                 <div class="row">
-                    <div class="col-md-3 white">  Prescription Drug:</div>
+                    <div class="col-3 white">  Prescription Drug:</div>
                 </div>
 
                 <div class="row">
-                    <div class="col-md-3 goldenrod"> @c.DrugName</div>
+                    <div class="col-3 goldenrod"> @c.DrugName</div>
                 </div>
             }
 
@@ -393,13 +396,13 @@
                 var paymentDate = value.Substring(0, value.IndexOf(" "));
 
                 <div class="row">
-                    <div class="col-md-3 white">  Payment Amount:</div>
-                    <div class="col-md-3 white">  Date: </div> 
+                    <div class="col-3 white">  Payment Amount:</div>
+                    <div class="col-3 white">  Date: </div> 
                 </div>
 
                 <div class="row">
-                    <div class="col-md-3 dodgerblue">  $@c.PaymentAmount</div>
-                    <div class="col-md-3 dodgerblue">  @paymentDate </div> 
+                    <div class="col-3 dodgerblue">  $@c.PaymentAmount</div>
+                    <div class="col-3 dodgerblue">  @paymentDate </div> 
                 </div>
 
             } // end paid
@@ -415,13 +418,13 @@
                 var dateAdded = value.Substring(0, value.IndexOf(" "));
 
                 <div class="row">
-                    <div class="col-md-3 white">  @action</div>
-                    <div class="col-md-3 white">  @date </div>
+                    <div class="col-3 white">  @action</div>
+                    <div class="col-3 white">  @date </div>
                 </div>
 
                 <div class="row">
-                    <div class="col-md-3 goldenrod">  @c.AdjustedClaimId </div>
-                    <div class="col-md-3 goldenrod">  @dateAdded</div>
+                    <div class="col-3 goldenrod">  @c.AdjustedClaimId </div>
+                    <div class="col-3 goldenrod">  @dateAdded</div>
                 </div>
             }
 
@@ -437,14 +440,14 @@
 
 
                 <div class="row">
-                    <div class="col-md-3 white">  @action</div>
-                    <div class="col-md-3 white">  @date </div>
+                    <div class="col-3 white">  @action</div>
+                    <div class="col-3 white">  @date </div>
                 </div>
 
                 <div class="row">
 
-                    <div class="col-md-3 goldenrod">  @c.AdjustingClaimId </div>
-                    <div class="col-md-3 goldenrod">  @adjustedDate</div>
+                    <div class="col-3 goldenrod">  @c.AdjustingClaimId </div>
+                    <div class="col-3 goldenrod">  @adjustedDate</div>
                 </div>
             }
 
@@ -454,15 +457,17 @@
             // allow entered claims to be adjusted even if not paid.
             var allowPay = (c.ClaimStatus == "Entered" || c.ClaimStatus == "Adjustment");
             var allowAdjustment = (c.ClaimStatus == "Entered" || c.ClaimStatus == "Adjustment");
+            var allowCopy = (c.ClaimStatus == "Entered" || c.ClaimStatus == "Adjustment");
 
             anyOfAbove = allowAdjustment || allowPay;
-            var adjust = "adjust" + c.ClaimIdNumber;
+            var adjust = "adjust" + c.ClaimIdNumber; 
+            var copy = "copy" + c.ClaimIdNumber;
             var pay = "pay..." + c.ClaimIdNumber;
 
 
             // action line show appropriate buttons ....
 
-            <div class="row" style="margin-top: 25px; margin-bottom: 25px;">
+            <div style="margin-top: 25px; margin-bottom: 25px;">
 
 
                 @Html.ActionLink("Menu", "Menu", "Home", null, new { @class = "g1menu btn btn-outline-primary" })
@@ -517,6 +522,16 @@
                                 type="submit"
                                 class="g3adjust btn btn-outline-warning">
                             Adjust
+                        </button>
+                    }
+
+                    if (allowCopy)  
+                    {
+                        <button value=@copy
+                                name="sub"
+                                type="submit"
+                                class="g3copy btn btn-outline-warning">
+                            Copy
                         </button>
                     }
 
@@ -594,4 +609,7 @@
 
         } @* end of claim loop *@
 
-    }
+        } @* end of outer claim block *@
+
+
+    </form>
